@@ -61,7 +61,7 @@ export default function AnalyticsPage() {
         title="Model & Network Analytics"
         tagline="Evaluation metrics, anomaly classification distributions, and spatial network health."
         badge={
-          <span className="text-xs font-mono px-2.5 py-1 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-800">
             MODEL v2.4 EVAL
           </span>
         }
@@ -112,24 +112,24 @@ export default function AnalyticsPage() {
         {/* Left: Anomalies by Fault Type (6 cols) */}
         <div className="lg:col-span-6">
           <GlassCard className="p-5 flex flex-col h-full">
-            <div className="flex items-center justify-between pb-3 border-b border-[#1B2B3D] mb-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-slate-200">
+                <BarChart3 className="w-4 h-4 text-blue-700" />
+                <h3 className="text-xs font-bold tracking-wider uppercase text-slate-800">
                   Anomalies by Fault Type
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">PAST 30 DAYS</span>
+              <span className="text-[11px] font-semibold text-slate-500">PAST 30 DAYS</span>
             </div>
 
             <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={anomalyTypeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1B2B3D" vertical={false} opacity={0.6} />
-                  <XAxis dataKey="type" stroke="#64748B" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                  <XAxis dataKey="type" stroke="#64748B" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#08111D', borderColor: '#2D4560', color: '#F8FAFC', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', color: '#0F172A', borderRadius: '6px', fontSize: '11px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                   />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -141,14 +141,14 @@ export default function AnalyticsPage() {
         {/* Right: Anomaly Timeline Density (6 cols) */}
         <div className="lg:col-span-6">
           <GlassCard className="p-5 flex flex-col h-full">
-            <div className="flex items-center justify-between pb-3 border-b border-[#1B2B3D] mb-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-slate-200">
+                <Activity className="w-4 h-4 text-blue-700" />
+                <h3 className="text-xs font-bold tracking-wider uppercase text-slate-800">
                   Anomaly Detection Frequency (24H)
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">HOURLY INCIDENCE</span>
+              <span className="text-[11px] font-semibold text-slate-500">HOURLY INCIDENCE</span>
             </div>
 
             <div className="h-[260px] w-full">
@@ -156,17 +156,17 @@ export default function AnalyticsPage() {
                 <AreaChart data={temporalTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="areaEvents" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00F0FF" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#00F0FF" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#0F2C59" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#0F2C59" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1B2B3D" vertical={false} opacity={0.6} />
-                  <XAxis dataKey="hour" stroke="#64748B" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                  <XAxis dataKey="hour" stroke="#64748B" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#08111D', borderColor: '#2D4560', color: '#F8FAFC', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', color: '#0F172A', borderRadius: '6px', fontSize: '11px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                   />
-                  <Area type="monotone" dataKey="events" stroke="#00F0FF" strokeWidth={2} fill="url(#areaEvents)" />
+                  <Area type="monotone" dataKey="events" stroke="#0F2C59" strokeWidth={2} fill="url(#areaEvents)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -178,24 +178,24 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-6">
           <GlassCard className="p-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#1B2B3D] mb-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-slate-200">
+                <ShieldCheck className="w-4 h-4 text-blue-700" />
+                <h3 className="text-xs font-bold tracking-wider uppercase text-slate-800">
                   Network Health Score Distribution
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">12 STATIONS</span>
+              <span className="text-[11px] font-semibold text-slate-500">12 STATIONS</span>
             </div>
 
             <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={healthBuckets} layout="vertical" margin={{ top: 10, right: 20, left: 30, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1B2B3D" horizontal={false} opacity={0.6} />
-                  <XAxis type="number" stroke="#64748B" fontSize={10} />
-                  <YAxis dataKey="range" type="category" stroke="#64748B" fontSize={10} tickLine={false} width={110} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                  <XAxis type="number" stroke="#64748B" fontSize={11} />
+                  <YAxis dataKey="range" type="category" stroke="#64748B" fontSize={11} tickLine={false} width={110} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#08111D', borderColor: '#2D4560', color: '#F8FAFC', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', color: '#0F172A', borderRadius: '6px', fontSize: '11px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                   />
                   <Bar dataKey="stations" radius={[0, 4, 4, 0]} />
                 </BarChart>
@@ -207,37 +207,39 @@ export default function AnalyticsPage() {
         <div className="lg:col-span-6">
           <GlassCard className="p-5 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between pb-3 border-b border-[#1B2B3D] mb-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
                 <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-slate-200">
+                  <Cpu className="w-4 h-4 text-blue-700" />
+                  <h3 className="text-xs font-bold tracking-wider uppercase text-slate-800">
                     Model Verification Matrix
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono text-emerald-400">CROSS-VALIDATED</span>
+                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                  CROSS-VALIDATED
+                </span>
               </div>
 
               <div className="space-y-2.5 font-mono text-xs">
-                <div className="flex items-center justify-between p-2 rounded bg-[#08111D] border border-[#1B2B3D]">
-                  <span className="text-slate-400">Spatial Kriging Correlation (R²)</span>
-                  <span className="text-emerald-400 font-bold">0.964</span>
+                <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 border border-slate-200">
+                  <span className="text-slate-600 font-sans">Spatial Kriging Correlation (R²)</span>
+                  <span className="text-emerald-700 font-bold">0.964</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded bg-[#08111D] border border-[#1B2B3D]">
-                  <span className="text-slate-400">Temporal Autoencoder Latency</span>
-                  <span className="text-cyan-300 font-bold">14.2 ms / sample</span>
+                <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 border border-slate-200">
+                  <span className="text-slate-600 font-sans">Temporal Autoencoder Latency</span>
+                  <span className="text-blue-900 font-bold">14.2 ms / sample</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded bg-[#08111D] border border-[#1B2B3D]">
-                  <span className="text-slate-400">Clausius-Clapeyron Constraint Violations</span>
-                  <span className="text-red-400 font-bold">2 flagged (AWS_007)</span>
+                <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 border border-slate-200">
+                  <span className="text-slate-600 font-sans">Clausius-Clapeyron Constraint Violations</span>
+                  <span className="text-red-700 font-bold">2 flagged (AWS_007)</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded bg-[#08111D] border border-[#1B2B3D]">
-                  <span className="text-slate-400">Telemetry Ingestion Throughput</span>
-                  <span className="text-white font-bold">1,200 msg / sec</span>
+                <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 border border-slate-200">
+                  <span className="text-slate-600 font-sans">Telemetry Ingestion Throughput</span>
+                  <span className="text-slate-900 font-bold">1,200 msg / sec</span>
                 </div>
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-400 font-sans mt-3">
+            <p className="text-[11px] text-slate-500 font-sans mt-3">
               Algorithms continuously recalibrate against rolling 7-day climatological baselines and spatial neighbor matrices.
             </p>
           </GlassCard>

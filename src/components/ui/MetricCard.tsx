@@ -31,33 +31,33 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   trend
 }) => {
   const iconColors = {
-    default: 'text-slate-400 bg-slate-800/40 border-slate-700/50',
-    elevated: 'text-cyan-400 bg-cyan-950/40 border-cyan-800/50',
-    critical: 'text-red-400 bg-red-950/40 border-red-800/50',
-    warning: 'text-amber-400 bg-amber-950/40 border-amber-800/50',
-    healthy: 'text-emerald-400 bg-emerald-950/40 border-emerald-800/50',
-    accent: 'text-cyan-300 bg-cyan-950/40 border-cyan-700/50'
+    default: 'text-slate-600 bg-slate-100 border-slate-200',
+    elevated: 'text-blue-700 bg-blue-50 border-blue-200',
+    critical: 'text-red-700 bg-red-50 border-red-200',
+    warning: 'text-amber-700 bg-amber-50 border-amber-200',
+    healthy: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    accent: 'text-blue-700 bg-blue-50 border-blue-200'
   };
 
   return (
     <GlassCard variant={variant} className="p-4 sm:p-5 flex flex-col justify-between">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-xs font-mono tracking-wider uppercase text-slate-400 font-medium">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           {label}
         </span>
-        <div className={`p-2 rounded-lg border ${iconColors[variant]}`}>
+        <div className={`p-2 rounded-md border ${iconColors[variant]}`}>
           <Icon className="w-4 h-4" />
         </div>
       </div>
 
       <div className="flex items-baseline gap-2 my-1">
-        <span className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-white">
+        <span className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
           <AnimatedNumber value={value} precision={precision} prefix={prefix} suffix={suffix} />
         </span>
         {trend && (
           <span
-            className={`text-xs font-mono font-medium px-1.5 py-0.5 rounded ${
-              trend.isPositive ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'
+            className={`text-xs font-semibold px-2 py-0.5 rounded ${
+              trend.isPositive ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-red-700 bg-red-50 border border-red-200'
             }`}
           >
             {trend.value}
@@ -66,7 +66,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       </div>
 
       {subtext && (
-        <p className="text-xs text-slate-400/90 mt-1 font-sans flex items-center gap-1.5">
+        <p className="text-xs text-slate-500 mt-1 font-sans flex items-center gap-1.5">
           {subtext}
         </p>
       )}

@@ -14,9 +14,9 @@ interface IndiaMapProps {
 const IndiaMapClient = dynamic(() => import('./IndiaMapClient'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full min-h-[420px] rounded-xl border border-[#1B2B3D] bg-[#08111D] flex flex-col items-center justify-center gap-3 text-slate-400">
-      <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
-      <span className="text-xs font-mono">Initializing National Geospatial Grid...</span>
+    <div className="w-full h-full min-h-[420px] rounded-lg border border-slate-200 bg-white flex flex-col items-center justify-center gap-3 text-slate-500">
+      <Loader2 className="w-6 h-6 animate-spin text-blue-700" />
+      <span className="text-xs font-medium">Loading National Geospatial Grid...</span>
     </div>
   )
 });

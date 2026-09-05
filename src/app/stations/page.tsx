@@ -61,7 +61,7 @@ export default function StationsPage() {
         title="Weather Station Directory"
         tagline="Comprehensive inventory & real-time telemetry from 12 Automatic Weather Stations."
         badge={
-          <span className="text-xs font-mono px-2.5 py-1 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-800">
             {filteredStations.length} of {stations.length} STATIONS
           </span>
         }
@@ -77,22 +77,22 @@ export default function StationsPage() {
             placeholder="Search station ID, name, region..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-[#08111D] border border-[#1B2B3D] text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white border border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors shadow-2xs"
           />
         </div>
 
         {/* Filter Badges & Sort Controls */}
         <div className="flex items-center gap-3 w-full md:w-auto flex-wrap justify-between md:justify-end">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1 bg-[#08111D] p-1 rounded-lg border border-[#1B2B3D] text-xs font-mono">
+          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs text-xs">
             {(['ALL', 'HEALTHY', 'DEGRADED', 'CRITICAL'] as const).map((st) => (
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
-                className={`px-2.5 py-1 rounded transition-all ${
+                className={`px-3 py-1.5 rounded transition-all font-semibold ${
                   statusFilter === st
-                    ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#0F2C59] text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 {st}
@@ -101,18 +101,18 @@ export default function StationsPage() {
           </div>
 
           {/* Sort Dropdown */}
-          <div className="flex items-center gap-1.5 bg-[#08111D] px-2.5 py-1.5 rounded-lg border border-[#1B2B3D] text-xs font-mono text-slate-300">
-            <ArrowUpDown className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs text-xs text-slate-700">
+            <ArrowUpDown className="w-3.5 h-3.5 text-blue-700" />
             <span className="text-slate-500">Sort:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
+              className="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer"
             >
-              <option value="health" className="bg-[#08111D]">Health Score (Low to High)</option>
-              <option value="anomalies" className="bg-[#08111D]">Active Anomalies</option>
-              <option value="temp" className="bg-[#08111D]">Temperature</option>
-              <option value="id" className="bg-[#08111D]">Station ID</option>
+              <option value="health">Health Score (Low to High)</option>
+              <option value="anomalies">Active Anomalies</option>
+              <option value="temp">Temperature</option>
+              <option value="id">Station ID</option>
             </select>
           </div>
         </div>
@@ -136,45 +136,45 @@ export default function StationsPage() {
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono font-bold text-cyan-400">{station.id}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#101D2D] text-slate-400 border border-[#1B2B3D]">
+                      <span className="text-sm font-mono font-bold text-blue-900">{station.id}</span>
+                      <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
                         {station.elevation}m
                       </span>
                     </div>
-                    <h3 className="text-sm font-bold text-white mt-0.5">{station.name}</h3>
-                    <p className="text-xs text-slate-400 font-sans">{station.region}, {station.state}</p>
+                    <h3 className="text-sm font-bold text-slate-900 mt-0.5">{station.name}</h3>
+                    <p className="text-xs text-slate-500 font-sans">{station.region}, {station.state}</p>
                   </div>
                   <StatusBadge status={station.status} size="sm" />
                 </div>
 
                 {/* Metrics 3-Col Bar */}
-                <div className="grid grid-cols-3 gap-2 bg-[#050B14]/80 p-2.5 rounded-lg border border-[#1B2B3D] my-4 font-mono text-center">
+                <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 my-4 text-center">
                   <div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 mb-0.5">
-                      <Thermometer className="w-3 h-3 text-cyan-400" />
+                    <div className="flex items-center justify-center gap-1 text-[11px] text-slate-500 mb-0.5 font-medium">
+                      <Thermometer className="w-3 h-3 text-blue-700" />
                       TEMP
                     </div>
-                    <div className={`text-sm font-bold ${station.currentReadings.temperature > 45 ? 'text-red-400 animate-pulse' : 'text-slate-100'}`}>
+                    <div className={`text-sm font-bold ${station.currentReadings.temperature > 45 ? 'text-red-700' : 'text-slate-900'}`}>
                       {station.currentReadings.temperature}°C
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 mb-0.5">
-                      <Droplets className="w-3 h-3 text-cyan-400" />
+                    <div className="flex items-center justify-center gap-1 text-[11px] text-slate-500 mb-0.5 font-medium">
+                      <Droplets className="w-3 h-3 text-blue-700" />
                       RH
                     </div>
-                    <div className="text-sm font-bold text-slate-100">
+                    <div className="text-sm font-bold text-slate-900">
                       {station.currentReadings.humidity}%
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 mb-0.5">
-                      <Gauge className="w-3 h-3 text-cyan-400" />
+                    <div className="flex items-center justify-center gap-1 text-[11px] text-slate-500 mb-0.5 font-medium">
+                      <Gauge className="w-3 h-3 text-blue-700" />
                       PRES
                     </div>
-                    <div className="text-sm font-bold text-slate-100">
+                    <div className="text-sm font-bold text-slate-900">
                       {station.currentReadings.pressure}
                     </div>
                   </div>
@@ -187,20 +187,20 @@ export default function StationsPage() {
 
                 {/* Individual Sub-Sensors Health Pills */}
                 {station.sensors && (
-                  <div className="grid grid-cols-3 gap-1.5 mb-3 text-[10px] font-mono">
+                  <div className="grid grid-cols-3 gap-1.5 mb-3 text-[11px] font-mono">
                     {station.sensors.map((s) => (
                       <div
                         key={s.type}
-                        className={`px-1.5 py-1 rounded border text-center font-bold truncate ${
+                        className={`px-1.5 py-1 rounded border text-center font-semibold truncate ${
                           s.state === 'FAULT'
-                            ? 'bg-red-950/40 text-red-300 border-red-500/40 animate-pulse'
+                            ? 'bg-red-50 text-red-700 border-red-200 font-bold'
                             : s.state !== 'NOMINAL'
-                            ? 'bg-amber-950/30 text-amber-300 border-amber-500/40'
-                            : 'bg-[#08111D] text-emerald-400/90 border-[#1B2B3D]'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200 font-bold'
+                            : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                         }`}
                         title={`${s.name}: ${s.healthScore}/100 (${s.stateLabel})`}
                       >
-                        <span className="text-slate-400 font-normal mr-0.5">
+                        <span className="text-slate-500 font-normal mr-0.5">
                           {s.type === 'temperature' ? 'T' : s.type === 'humidity' ? 'RH' : 'P'}:
                         </span>
                         {s.state === 'NOMINAL' ? 'OK' : s.state}
@@ -211,8 +211,8 @@ export default function StationsPage() {
 
                 {/* Anomaly Indicator */}
                 {station.activeAnomalies.length > 0 && (
-                  <div className="mb-4 p-2 rounded bg-red-950/40 border border-red-500/40 text-xs font-mono text-red-300 flex items-center gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                  <div className="mb-4 p-2.5 rounded bg-red-50 border border-red-200 text-xs font-semibold text-red-800 flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
                     <span>{station.activeAnomalies.length} active anomaly flagged</span>
                   </div>
                 )}
@@ -221,10 +221,10 @@ export default function StationsPage() {
               {/* Action Button */}
               <Link
                 href={`/stations/${station.id}`}
-                className={`w-full py-2 px-3 rounded-lg text-xs font-mono font-medium flex items-center justify-center gap-1.5 transition-all border ${
+                className={`w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border ${
                   isCritical
-                    ? 'bg-red-950/60 hover:bg-red-900/70 border-red-500/50 text-red-200'
-                    : 'bg-[#101D2D] hover:bg-cyan-950/50 border-[#1B2B3D] hover:border-cyan-500/40 text-slate-200 hover:text-cyan-300'
+                    ? 'bg-red-600 hover:bg-red-700 border-red-700 text-white'
+                    : 'bg-slate-100 hover:bg-blue-50 border-slate-200 hover:border-blue-300 text-slate-800 hover:text-blue-900'
                 }`}
               >
                 <span>Investigate Station</span>

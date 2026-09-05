@@ -16,27 +16,24 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   ...props
 }) => {
   const variantStyles = {
-    default: 'bg-[#0D1826]/85 border-[#1B2B3D] text-slate-100 hover:border-[#2D4560]',
-    elevated: 'bg-[#101D2D]/90 border-[#2D4560] text-slate-100 shadow-xl shadow-black/40',
-    critical: 'bg-[#180F16]/90 border-red-500/40 text-slate-100 shadow-lg shadow-red-950/20',
-    warning: 'bg-[#1A180E]/90 border-amber-500/40 text-slate-100 shadow-lg shadow-amber-950/20',
-    healthy: 'bg-[#0A1A17]/90 border-emerald-500/30 text-slate-100 shadow-lg shadow-emerald-950/20',
-    accent: 'bg-[#091B2A]/90 border-cyan-500/40 text-slate-100 shadow-lg shadow-cyan-950/30'
+    default: 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 shadow-sm',
+    elevated: 'bg-white border-slate-200 text-slate-800 shadow-md',
+    critical: 'bg-red-50/70 border-red-200 text-slate-900 shadow-sm',
+    warning: 'bg-amber-50/70 border-amber-200 text-slate-900 shadow-sm',
+    healthy: 'bg-emerald-50/70 border-emerald-200 text-slate-900 shadow-sm',
+    accent: 'bg-blue-50/70 border-blue-200 text-slate-900 shadow-sm'
   };
 
   return (
     <motion.div
       className={`
-        relative rounded-xl border backdrop-blur-md transition-all duration-200
+        relative rounded-lg border transition-all duration-150
         ${variantStyles[variant]}
-        ${interactive ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-cyan-500/10' : ''}
+        ${interactive ? 'cursor-pointer hover:shadow-md' : ''}
         ${className}
       `}
       {...props}
     >
-      {/* Subtle corner technical markers */}
-      <div className="pointer-events-none absolute -top-px -left-px w-2 h-2 border-t-2 border-l-2 border-cyan-500/40 rounded-tl-sm opacity-60" />
-      <div className="pointer-events-none absolute -bottom-px -right-px w-2 h-2 border-b-2 border-r-2 border-cyan-500/40 rounded-br-sm opacity-60" />
       {children}
     </motion.div>
   );

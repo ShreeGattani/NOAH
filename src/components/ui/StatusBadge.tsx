@@ -14,27 +14,24 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 }) => {
   const configs = {
     HEALTHY: {
-      bg: 'bg-emerald-500/10',
-      border: 'border-emerald-500/30',
-      text: 'text-emerald-400',
-      dot: 'bg-emerald-400',
-      pulse: false,
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      text: 'text-emerald-700',
+      dot: 'bg-emerald-600',
       label: 'HEALTHY'
     },
     DEGRADED: {
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/30',
-      text: 'text-amber-400',
-      dot: 'bg-amber-400',
-      pulse: true,
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      text: 'text-amber-700',
+      dot: 'bg-amber-600',
       label: 'DEGRADED'
     },
     CRITICAL: {
-      bg: 'bg-red-500/15',
-      border: 'border-red-500/40',
-      text: 'text-red-400',
-      dot: 'bg-red-500',
-      pulse: true,
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      text: 'text-red-700',
+      dot: 'bg-red-600',
       label: 'CRITICAL'
     }
   };
@@ -42,9 +39,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   const config = configs[status] || configs.HEALTHY;
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5 gap-1.5 font-mono',
-    md: 'text-xs px-2.5 py-1 gap-2 font-mono font-medium',
-    lg: 'text-sm px-3.5 py-1.5 gap-2.5 font-mono font-semibold'
+    sm: 'text-[11px] px-2 py-0.5 gap-1.5 font-medium',
+    md: 'text-xs px-2.5 py-1 gap-1.5 font-medium',
+    lg: 'text-sm px-3 py-1.5 gap-2 font-semibold'
   };
 
   const dotSizes = {
@@ -55,16 +52,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border transition-colors ${config.bg} ${config.border} ${config.text} ${sizeClasses[size]}`}
+      className={`inline-flex items-center rounded-md border ${config.bg} ${config.border} ${config.text} ${sizeClasses[size]}`}
     >
-      <span className="relative flex items-center justify-center">
-        {config.pulse && (
-          <span
-            className={`absolute inline-flex h-full w-full animate-ping rounded-full ${config.dot} opacity-75`}
-          />
-        )}
-        <span className={`relative inline-flex rounded-full ${dotSizes[size]} ${config.dot}`} />
-      </span>
+      <span className={`inline-block rounded-full ${dotSizes[size]} ${config.dot}`} />
       {showLabel && <span>{config.label}</span>}
     </span>
   );

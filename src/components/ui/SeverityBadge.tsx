@@ -12,33 +12,33 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({
 }) => {
   const configs = {
     LOW: {
-      bg: 'bg-blue-500/10',
-      border: 'border-blue-500/30',
-      text: 'text-blue-400'
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      text: 'text-blue-700'
     },
     MEDIUM: {
-      bg: 'bg-amber-500/15',
-      border: 'border-amber-500/40',
-      text: 'text-amber-400'
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      text: 'text-amber-700'
     },
     HIGH: {
-      bg: 'bg-orange-500/15',
-      border: 'border-orange-500/40',
-      text: 'text-orange-400'
+      bg: 'bg-orange-50',
+      border: 'border-orange-200',
+      text: 'text-orange-700'
     },
     CRITICAL: {
-      bg: 'bg-red-500/20',
-      border: 'border-red-500/50',
-      text: 'text-red-400'
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      text: 'text-red-700'
     }
   };
 
   const config = configs[severity] || configs.LOW;
-  const sizeClasses = size === 'sm' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2.5 py-0.5';
+  const sizeClasses = size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-0.5';
 
   return (
     <span
-      className={`inline-flex items-center font-mono font-semibold uppercase tracking-wider rounded border ${config.bg} ${config.border} ${config.text} ${sizeClasses}`}
+      className={`inline-flex items-center font-medium uppercase rounded border ${config.bg} ${config.border} ${config.text} ${sizeClasses}`}
     >
       {severity}
     </span>

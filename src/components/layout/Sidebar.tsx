@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -9,7 +10,6 @@ import {
   AlertTriangle,
   BarChart3,
   Settings,
-  Activity,
   ShieldCheck,
   Cpu,
   Waves
@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
       href: '/anomalies',
       icon: AlertTriangle,
       badge: activeAnomalyCount > 0 ? `${activeAnomalyCount}` : null,
-      badgeColor: 'bg-red-500/20 text-red-400 border border-red-500/40'
+      badgeColor: 'bg-red-600 text-white font-bold'
     },
     {
       name: 'Analytics',
@@ -60,24 +60,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
   ];
 
   return (
-    <aside className="w-64 h-full bg-[#08111D] border-r border-[#1B2B3D] flex flex-col justify-between shrink-0 select-none z-30">
+    <aside className="w-64 h-full bg-[#0F2C59] border-r border-[#091E3A] flex flex-col justify-between shrink-0 select-none z-30 text-white">
       {/* Brand Header */}
       <div>
-        <div className="p-5 border-b border-[#1B2B3D]/80 flex items-center justify-between">
+        <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-3 group" onClick={onCloseMobile}>
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-shadow flex items-center justify-center">
-              <div className="w-full h-full bg-[#08111D] rounded-[7px] flex items-center justify-center">
-                <Activity className="w-5 h-5 text-cyan-400" />
-              </div>
+            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-white/20 shadow-md">
+              <Image
+                src="/logo.png"
+                alt="NOAH Logo"
+                fill
+                className="object-cover"
+                sizes="40px"
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-mono font-bold text-lg tracking-wider text-white">NOAH</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
-                  v2.4
+                <span className="font-bold text-lg tracking-wider text-white">NOAH</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-900 border border-sky-600 text-sky-200 font-semibold">
+                  IMD MET
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-mono tracking-tight">
+              <p className="text-[11px] text-slate-300 font-sans tracking-tight">
                 Network Intelligence
               </p>
             </div>
@@ -96,24 +100,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
                 href={item.href}
                 onClick={onCloseMobile}
                 className={`
-                  flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all group
+                  flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-all
                   ${
                     isActive
-                      ? 'bg-cyan-950/40 border border-cyan-500/40 text-cyan-300 shadow-sm shadow-cyan-500/10'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#0D1826] border border-transparent'
+                      ? 'bg-white/15 text-white font-semibold border-l-4 border-sky-400 pl-2.5 shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10 border-l-4 border-transparent pl-2.5'
                   }
                 `}
               >
                 <div className="flex items-center gap-3">
                   <Icon
                     className={`w-4 h-4 transition-colors ${
-                      isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200'
+                      isActive ? 'text-sky-300' : 'text-slate-400'
                     }`}
                   />
                   <span>{item.name}</span>
                 </div>
                 {item.badge && (
-                  <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
                     {item.badge}
                   </span>
                 )}
@@ -124,37 +128,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
       </div>
 
       {/* System Status Footprint */}
-      <div className="p-4 border-t border-[#1B2B3D]/80 bg-[#050B14]/40">
+      <div className="p-4 border-t border-white/10 bg-[#091E3A]/60">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
-            System Status
+          <span className="text-[11px] uppercase tracking-wider text-slate-300 font-bold">
+            Telemetry Feed
           </span>
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
         </div>
 
-        <div className="space-y-1.5 text-xs font-mono">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="space-y-1.5 text-xs">
+          <div className="flex items-center justify-between text-slate-300">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              API Connected
+              API Gateway
             </span>
-            <span className="text-[10px] text-emerald-400">200 OK</span>
+            <span className="text-[10px] text-emerald-300 font-mono">200 OK</span>
           </div>
 
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-300">
             <span className="flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+              <Cpu className="w-3.5 h-3.5 text-sky-300" />
               ML Engine
             </span>
-            <span className="text-[10px] text-cyan-400">ONLINE</span>
+            <span className="text-[10px] text-sky-300 font-mono">ONLINE</span>
           </div>
 
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-300">
             <span className="flex items-center gap-1.5">
-              <Waves className="w-3.5 h-3.5 text-cyan-400" />
+              <Waves className="w-3.5 h-3.5 text-sky-300" />
               WebSocket
             </span>
-            <span className="text-[10px] text-cyan-400">LIVE (12ms)</span>
+            <span className="text-[10px] text-sky-300 font-mono">LIVE (12ms)</span>
           </div>
         </div>
       </div>

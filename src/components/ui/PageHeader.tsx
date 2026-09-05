@@ -14,16 +14,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   badge
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#1B2B3D]/70 mb-6">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 mb-6">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-sans">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-sans">
             {title}
           </h1>
           {badge}
         </div>
         {tagline && (
-          <p className="text-sm text-slate-400 mt-1 font-sans">
+          <p className="text-sm text-slate-500 mt-1 font-sans">
             {tagline}
           </p>
         )}
