@@ -1,4 +1,61 @@
-import { Station, Anomaly, NetworkSummary, StationReading, DemoScenario, AnomalyType } from '@/types';
+import {
+  Station,
+  Anomaly,
+  NetworkSummary,
+  StationReading,
+  DemoScenario,
+  AnomalyType,
+  SensorChannelHealth,
+  SensorState
+} from '@/types';
+
+function createStationSensors(
+  stationId: string,
+  overallHealth: number,
+  tempOverride?: Partial<SensorChannelHealth>,
+  humidityOverride?: Partial<SensorChannelHealth>,
+  pressureOverride?: Partial<SensorChannelHealth>
+): SensorChannelHealth[] {
+  const baseTemp = tempOverride?.healthScore ?? (overallHealth >= 90 ? 96 : overallHealth);
+  const baseHumidity = humidityOverride?.healthScore ?? (overallHealth >= 90 ? 94 : overallHealth);
+  const basePressure = pressureOverride?.healthScore ?? (overallHealth >= 90 ? 97 : overallHealth);
+
+  return [
+    {
+      type: 'temperature',
+      name: 'Ambient Temperature Sensor',
+      model: 'Platinum RTD Pt100 (1/3 DIN)',
+      healthScore: baseTemp,
+      state: tempOverride?.state || (baseTemp >= 85 ? 'NOMINAL' : baseTemp >= 70 ? 'DEGRADED' : 'FAULT'),
+      stateLabel: tempOverride?.stateLabel || (baseTemp >= 85 ? 'Nominal Operation' : 'Thermal Variation'),
+      status: tempOverride?.status || (baseTemp >= 85 ? 'HEALTHY' : baseTemp >= 70 ? 'DEGRADED' : 'CRITICAL'),
+      diagnosticNote: tempOverride?.diagnosticNote || 'Resistance curve within ITS-90 baseline standard.',
+      ...tempOverride
+    },
+    {
+      type: 'humidity',
+      name: 'Relative Humidity Sensor',
+      model: 'Vaisala HUMICAP® 180R',
+      healthScore: baseHumidity,
+      state: humidityOverride?.state || (baseHumidity >= 85 ? 'NOMINAL' : baseHumidity >= 70 ? 'DEGRADED' : 'DRIFT'),
+      stateLabel: humidityOverride?.stateLabel || (baseHumidity >= 85 ? 'Nominal Operation' : 'Capacitive Drift'),
+      status: humidityOverride?.status || (baseHumidity >= 85 ? 'HEALTHY' : baseHumidity >= 70 ? 'DEGRADED' : 'CRITICAL'),
+      diagnosticNote: humidityOverride?.diagnosticNote || 'Capacitive thin-film polymer hysteresis within ±1.0% RH.',
+      ...humidityOverride
+    },
+    {
+      type: 'pressure',
+      name: 'Barometric Pressure Transducer',
+      model: 'BAROCAP® Piezoresistive Diaphragm',
+      healthScore: basePressure,
+      state: pressureOverride?.state || (basePressure >= 85 ? 'NOMINAL' : basePressure >= 70 ? 'DEGRADED' : 'FAULT'),
+      stateLabel: pressureOverride?.stateLabel || (basePressure >= 85 ? 'Nominal Operation' : 'Barometric Variance'),
+      status: pressureOverride?.status || (basePressure >= 85 ? 'HEALTHY' : basePressure >= 70 ? 'DEGRADED' : 'CRITICAL'),
+      diagnosticNote: pressureOverride?.diagnosticNote || 'Precision calibrated silicon transducer within 0.05 hPa.',
+      ...pressureOverride
+    }
+  ];
+}
 
 export const INITIAL_STATIONS: Station[] = [
   {
@@ -11,6 +68,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 216,
     status: 'HEALTHY',
     healthScore: 96,
+    sensors: createStationSensors('AWS_001', 96),
     lastUpdated: 'Just now',
     currentReadings: {
       temperature: 24.2,
@@ -36,6 +94,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 14,
     status: 'HEALTHY',
     healthScore: 94,
+    sensors: createStationSensors('AWS_002', 94),
     lastUpdated: '12s ago',
     currentReadings: {
       temperature: 30.1,
@@ -61,6 +120,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 887,
     status: 'HEALTHY',
     healthScore: 91,
+    sensors: createStationSensors('AWS_003', 91),
     lastUpdated: '34s ago',
     currentReadings: {
       temperature: 22.8,
@@ -86,6 +146,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 16,
     status: 'HEALTHY',
     healthScore: 89,
+    sensors: createStationSensors('AWS_004', 89),
     lastUpdated: '50s ago',
     currentReadings: {
       temperature: 31.4,
@@ -111,6 +172,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 9,
     status: 'HEALTHY',
     healthScore: 92,
+    sensors: createStationSensors('AWS_005', 92),
     lastUpdated: '1m ago',
     currentReadings: {
       temperature: 27.6,
@@ -136,6 +198,19 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 385,
     status: 'DEGRADED',
     healthScore: 78,
+    sensors: createStationSensors(
+      'AWS_006',
+      78,
+      { healthScore: 94, state: 'NOMINAL', stateLabel: 'Nominal Operation', status: 'HEALTHY' },
+      {
+        healthScore: 58,
+        state: 'DRIFT',
+        stateLabel: 'Capacitive Drift (-11% RH)',
+        status: 'DEGRADED',
+        diagnosticNote: 'Negative offset bias detected against regional psychrometric baseline.'
+      },
+      { healthScore: 96, state: 'NOMINAL', stateLabel: 'Nominal Operation', status: 'HEALTHY' }
+    ),
     lastUpdated: '1m ago',
     currentReadings: {
       temperature: 26.5,
@@ -161,6 +236,31 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 237,
     status: 'CRITICAL',
     healthScore: 61,
+    sensors: createStationSensors(
+      'AWS_007',
+      61,
+      {
+        healthScore: 32,
+        state: 'FAULT',
+        stateLabel: 'Sudden Spike Anomaly (+31.8°C)',
+        status: 'CRITICAL',
+        diagnosticNote: 'Extreme temperature jump. Thermistor bridge degradation or thermocouple short.'
+      },
+      {
+        healthScore: 78,
+        state: 'DEGRADED',
+        stateLabel: 'Multivariate Inconsistency Warning',
+        status: 'DEGRADED',
+        diagnosticNote: 'Vapor pressure limit exceeded Clausius-Clapeyron thermodynamic boundary.'
+      },
+      {
+        healthScore: 92,
+        state: 'NOMINAL',
+        stateLabel: 'Operational Nominal',
+        status: 'HEALTHY',
+        diagnosticNote: 'Silicon diaphragm within baseline tolerance.'
+      }
+    ),
     lastUpdated: '2s ago',
     currentReadings: {
       temperature: 55.2,
@@ -186,6 +286,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 3500,
     status: 'HEALTHY',
     healthScore: 98,
+    sensors: createStationSensors('AWS_008', 98),
     lastUpdated: '18s ago',
     currentReadings: {
       temperature: -2.4,
@@ -211,6 +312,19 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 54,
     status: 'DEGRADED',
     healthScore: 74,
+    sensors: createStationSensors(
+      'AWS_009',
+      74,
+      {
+        healthScore: 38,
+        state: 'FROZEN',
+        stateLabel: 'Frozen Sensor Lock (0.000°C Flatline)',
+        status: 'DEGRADED',
+        diagnosticNote: 'ADC converter repeat pattern 0x3F800000. Zero variance over 3 hours.'
+      },
+      { healthScore: 92, state: 'NOMINAL', stateLabel: 'Nominal Operation', status: 'HEALTHY' },
+      { healthScore: 95, state: 'NOMINAL', stateLabel: 'Nominal Operation', status: 'HEALTHY' }
+    ),
     lastUpdated: '4m ago',
     currentReadings: {
       temperature: 21.0,
@@ -236,6 +350,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 58,
     status: 'HEALTHY',
     healthScore: 93,
+    sensors: createStationSensors('AWS_010', 93),
     lastUpdated: '22s ago',
     currentReadings: {
       temperature: 29.8,
@@ -261,6 +376,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 531,
     status: 'HEALTHY',
     healthScore: 95,
+    sensors: createStationSensors('AWS_011', 95),
     lastUpdated: '40s ago',
     currentReadings: {
       temperature: 27.3,
@@ -286,6 +402,7 @@ export const INITIAL_STATIONS: Station[] = [
     elevation: 560,
     status: 'HEALTHY',
     healthScore: 87,
+    sensors: createStationSensors('AWS_012', 87),
     lastUpdated: '15s ago',
     currentReadings: {
       temperature: 25.9,

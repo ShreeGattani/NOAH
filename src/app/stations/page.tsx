@@ -181,9 +181,33 @@ export default function StationsPage() {
                 </div>
 
                 {/* Sensor Health Progress */}
-                <div className="mb-4">
+                <div className="mb-3">
                   <HealthScore score={station.healthScore} size="sm" />
                 </div>
+
+                {/* Individual Sub-Sensors Health Pills */}
+                {station.sensors && (
+                  <div className="grid grid-cols-3 gap-1.5 mb-3 text-[10px] font-mono">
+                    {station.sensors.map((s) => (
+                      <div
+                        key={s.type}
+                        className={`px-1.5 py-1 rounded border text-center font-bold truncate ${
+                          s.state === 'FAULT'
+                            ? 'bg-red-950/40 text-red-300 border-red-500/40 animate-pulse'
+                            : s.state !== 'NOMINAL'
+                            ? 'bg-amber-950/30 text-amber-300 border-amber-500/40'
+                            : 'bg-[#08111D] text-emerald-400/90 border-[#1B2B3D]'
+                        }`}
+                        title={`${s.name}: ${s.healthScore}/100 (${s.stateLabel})`}
+                      >
+                        <span className="text-slate-400 font-normal mr-0.5">
+                          {s.type === 'temperature' ? 'T' : s.type === 'humidity' ? 'RH' : 'P'}:
+                        </span>
+                        {s.state === 'NOMINAL' ? 'OK' : s.state}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Anomaly Indicator */}
                 {station.activeAnomalies.length > 0 && (

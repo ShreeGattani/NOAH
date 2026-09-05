@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { HealthScore } from '@/components/ui/HealthScore';
 import { SeverityBadge } from '@/components/ui/SeverityBadge';
 import { LiveWeatherChart } from '@/components/dashboard/LiveWeatherChart';
+import { StationSensorHealthBreakdown } from '@/components/stations/StationSensorHealthBreakdown';
 import { useDemo } from '@/context/DemoContext';
 import {
   ArrowLeft,
@@ -210,6 +211,13 @@ export default function StationInvestigationPage({ params }: StationPageProps) {
           </p>
         </GlassCard>
       </div>
+
+      {/* Sub-Sensor Health & State Breakdown */}
+      {station.sensors && (
+        <div className="mb-6">
+          <StationSensorHealthBreakdown sensors={station.sensors} stationId={station.id} />
+        </div>
+      )}
 
       {/* Primary Chart Area */}
       <div className="mb-6">

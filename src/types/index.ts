@@ -22,6 +22,20 @@ export interface StationReading {
   anomalyScore?: number; // 0 to 100
 }
 
+export type SensorState = 'NOMINAL' | 'DEGRADED' | 'FAULT' | 'FROZEN' | 'DRIFT';
+
+export interface SensorChannelHealth {
+  type: 'temperature' | 'humidity' | 'pressure';
+  name: string;
+  model: string;
+  healthScore: number; // 0 - 100
+  state: SensorState;
+  stateLabel: string;
+  status: 'HEALTHY' | 'DEGRADED' | 'CRITICAL';
+  lastCalibrated?: string;
+  diagnosticNote?: string;
+}
+
 export interface Station {
   id: string; // e.g. "AWS_001"
   name: string; // e.g. "Safdarjung Met Observatory"
@@ -31,7 +45,8 @@ export interface Station {
   longitude: number;
   elevation: number; // in meters
   status: StationStatus;
-  healthScore: number; // 0 - 100
+  healthScore: number; // 0 - 100 overall
+  sensors: SensorChannelHealth[]; // Individual sub-sensor health & states
   lastUpdated: string; // ISO or relative
   currentReadings: {
     temperature: number;
