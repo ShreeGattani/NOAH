@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "your_database_url_here"
+DATABASE_URL = "postgresql://postgres:sql@localhost:5432/noahs_ark"
 
 engine = create_engine(DATABASE_URL)
 
@@ -11,6 +11,7 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
+Base = declarative_base()
 
 def get_db():
     db = SessionLocal()

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 class WeatherReading(BaseModel):
@@ -19,6 +19,7 @@ class WeatherReading(BaseModel):
 class AnomalyResult(BaseModel):
     timestamp: datetime
     station_id: str
+    sensor_types: list[str] = Field(default_factory=list)
     
     anomaly_score: float
     is_anomaly: bool
