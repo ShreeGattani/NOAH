@@ -31,9 +31,14 @@ def parse_portuguese_float(val: Any) -> Optional[float]:
 def parse_inmet_timestamp(date_str: str, time_str: str) -> str:
     """Combines INMET Date and Time into ISO 8601 UTC timestamp ('2024-01-01T00:00:00Z')."""
     d_clean = date_str.strip().replace("/", "-")
-    m_date = re.search(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})", d_clean)
-    if m_date:
-        yyyy, mm, dd = m_date.group(1), int(m_date.group(2)), int(m_date.group(3))
+    m_date1 = re.search(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})", d_clean)
+    m_date2 = re.search(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", d_clean)
+    
+    if m_date1:
+        yyyy, mm, dd = m_date1.group(1), int(m_date1.group(2)), int(m_date1.group(3))
+        iso_date = f"{yyyy}-{mm:02d}-{dd:02d}"
+    elif m_date2:
+        dd, mm, yyyy = int(m_date2.group(1)), int(m_date2.group(2)), m_date2.group(3)
         iso_date = f"{yyyy}-{mm:02d}-{dd:02d}"
     else:
         iso_date = "2024-01-01"
@@ -49,6 +54,7 @@ def parse_inmet_timestamp(date_str: str, time_str: str) -> str:
         hour = 0
 
     return f"{iso_date}T{hour % 24:02d}:00:00Z"
+
 
 
 def get_col_val(row_dict: Dict[str, str], *possible_keys: str) -> Optional[str]:

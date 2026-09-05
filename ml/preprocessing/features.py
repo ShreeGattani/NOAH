@@ -78,8 +78,8 @@ class FeatureScaler:
         self.scaling_params: Dict[str, Dict[str, float]] = {}
         self.is_fitted = False
 
-    def fit_transform(self, records: List[Dict[str, Any]], fields: List[str]) -> List[Dict[str, Any]]:
-        """Fits scaling parameters on numerical fields and attaches z-score scaled keys."""
+    def fit(self, records: List[Dict[str, Any]], fields: List[str]) -> "FeatureScaler":
+        """Fits scaling parameters (mean and std) on numerical fields across records."""
         for f in fields:
             vals = [r[f] for r in records if r.get(f) is not None]
             if vals:
@@ -91,13 +91,16 @@ class FeatureScaler:
                 self.scaling_params[f] = {"mean": 0.0, "std": 1.0}
 
         self.is_fitted = True
-        
+        return self
+
+    def transform(self, records: List[Dict[str, Any]], fields: List[str]) -> List[Dict[str, Any]]:
+        """Applies pre-fitted z-score scaling parameters to records."""
         scaled_records = []
         for r in records:
             item = dict(r)
             for f in fields:
                 val = item.get(f)
-                if val is not None:
+                if val is not None and f in self.scaling_params:
                     p = self.scaling_params[f]
                     item[f"scaled_{f}"] = round((val - p["mean"]) / p["std"], 4)
                 else:
@@ -106,13 +109,20 @@ class FeatureScaler:
 
         return scaled_records
 
+    def fit_transform(self, records: List[Dict[str, Any]], fields: List[str]) -> List[Dict[str, Any]]:
+        """Fits scaling parameters on numerical fields and attaches z-score scaled keys."""
+        self.fit(records, fields)
+        return self.transform(records, fields)
+
 
 def extract_ml_features(
     records: List[Dict[str, Any]], 
     include_metadata: bool = False,
     as_dataframe: bool = False,
     export_csv_path: Optional[str] = None,
-    max_rows: Optional[int] = None
+    max_rows: Optional[int] = None,
+    scaler: Optional[FeatureScaler] = None,
+    return_scaler: bool = False
 ) -> Any:
     """
     Primary Feature Engineering Function for Person 4 / ML Models.
@@ -120,27 +130,29 @@ def extract_ml_features(
     Takes raw clean dataset records (from dataset_loader.py) and computes:
     - Dew point (Magnus equation)
     - Backward 1-hour deltas (temp, humidity, pressure)
-    - Backward 3-hour rolling mean & std (temp, humidity, pressure)
+    - Backward 3-hour rolling baseline (t-3, t-2, t-1) mean & std (temp, humidity, pressure)
     - Cyclic sine/cosine time encodings (hour, month)
-    - Consistent z-score feature scaling
+    - Consistent z-score feature scaling (using fitted or new FeatureScaler)
     
     Parameters:
         include_metadata (bool): Optionally include 'timestamp' and 'station_id' for joining.
         as_dataframe (bool): If True, returns a pandas.DataFrame instead of List[Dict].
         export_csv_path (str): Optional path to export the 22 ML feature records as CSV.
         max_rows (Optional[int]): Cap on records to process. Set max_rows=None (default) to process 100% of all records.
+        scaler (Optional[FeatureScaler]): Pre-fitted FeatureScaler instance for test/inference data.
+        return_scaler (bool): If True, returns tuple (output, scaler).
         
     Returns ONLY the 22 ML feature fields requested for model input (Dict, DataFrame, or CSV).
     """
     if not records:
         if as_dataframe:
             import pandas as pd
-            return pd.DataFrame()
-        return []
+            res = pd.DataFrame()
+            return (res, scaler) if return_scaler else res
+        return ([], scaler) if return_scaler else []
 
     if max_rows and len(records) > max_rows:
         records = records[:max_rows]
-
 
     # Sort chronologically per station to guarantee zero future data leakage
     station_groups: Dict[str, List[Dict[str, Any]]] = {}
@@ -169,12 +181,12 @@ def extract_ml_features(
             item["humidity_delta_1h"] = round(item["humidity"] - prev_1h["humidity"], 2) if item.get("humidity") is not None and prev_1h.get("humidity") is not None else 0.0
             item["pressure_delta_1h"] = round(item["pressure"] - prev_1h["pressure"], 2) if item.get("pressure") is not None and prev_1h.get("pressure") is not None else 0.0
 
-            # 3. Backward 3-hour rolling window [t-2, t-1, t]
-            window_3h = sorted_group[max(0, i - 2): i + 1]
+            # 3. Backward 3-hour rolling window [t-3, t-2, t-1] EXCLUDING observation t
+            window_3h = sorted_group[max(0, i - 3): i]
             
             # Temperature rolling mean & std
             temp_vals = [w["temperature"] for w in window_3h if w.get("temperature") is not None]
-            item["temp_rolling_mean_3h"] = round(sum(temp_vals) / len(temp_vals), 2) if temp_vals else item.get("temperature", 0.0)
+            item["temp_rolling_mean_3h"] = round(sum(temp_vals) / len(temp_vals), 2) if temp_vals else (item.get("temperature") or 0.0)
             if len(temp_vals) > 1:
                 m = item["temp_rolling_mean_3h"]
                 var = sum((x - m) ** 2 for x in temp_vals) / len(temp_vals)
@@ -184,7 +196,7 @@ def extract_ml_features(
 
             # Humidity rolling mean & std
             rh_vals = [w["humidity"] for w in window_3h if w.get("humidity") is not None]
-            item["humidity_rolling_mean_3h"] = round(sum(rh_vals) / len(rh_vals), 2) if rh_vals else item.get("humidity", 0.0)
+            item["humidity_rolling_mean_3h"] = round(sum(rh_vals) / len(rh_vals), 2) if rh_vals else (item.get("humidity") or 0.0)
             if len(rh_vals) > 1:
                 m = item["humidity_rolling_mean_3h"]
                 var = sum((x - m) ** 2 for x in rh_vals) / len(rh_vals)
@@ -194,7 +206,7 @@ def extract_ml_features(
 
             # Pressure rolling mean & std
             press_vals = [w["pressure"] for w in window_3h if w.get("pressure") is not None]
-            item["pressure_rolling_mean_3h"] = round(sum(press_vals) / len(press_vals), 2) if press_vals else item.get("pressure", 0.0)
+            item["pressure_rolling_mean_3h"] = round(sum(press_vals) / len(press_vals), 2) if press_vals else (item.get("pressure") or 0.0)
             if len(press_vals) > 1:
                 m = item["pressure_rolling_mean_3h"]
                 var = sum((x - m) ** 2 for x in press_vals) / len(press_vals)
@@ -218,15 +230,18 @@ def extract_ml_features(
 
             enriched_records.append(item)
 
-    # 5. Fit z-score scaling on unscaled numerical features
+    # 5. Fit z-score scaling on unscaled numerical features or transform using passed scaler
     scale_targets = [
         "temperature", "humidity", "pressure", "dew_point",
         "temp_delta_1h", "humidity_delta_1h", "pressure_delta_1h",
         "temp_rolling_mean_3h", "humidity_rolling_mean_3h", "pressure_rolling_mean_3h",
         "temp_rolling_std_3h", "humidity_rolling_std_3h", "pressure_rolling_std_3h"
     ]
-    scaler = FeatureScaler()
-    scaled_dataset = scaler.fit_transform(enriched_records, scale_targets)
+    if scaler is None:
+        scaler = FeatureScaler()
+        scaled_dataset = scaler.fit_transform(enriched_records, scale_targets)
+    else:
+        scaled_dataset = scaler.transform(enriched_records, scale_targets)
 
     # 6. Filter output to return STRICTLY the 22 ML features
     ml_output = []
@@ -239,7 +254,8 @@ def extract_ml_features(
             feat_dict["station_id"] = r.get("station_id")
             
         for key in ML_FEATURE_FIELDS:
-            feat_dict[key] = r.get(key, 0.0)
+            val = r.get(key)
+            feat_dict[key] = val if val is not None else 0.0
             
         ml_output.append(feat_dict)
 
@@ -253,10 +269,11 @@ def extract_ml_features(
                 writer.writerows(ml_output)
             print(f"Successfully exported {len(ml_output)} ML feature records to CSV: {export_csv_path}")
 
-    if as_dataframe:
-        import pandas as pd
-        return pd.DataFrame(ml_output)
+    final_output = pd.DataFrame(ml_output) if as_dataframe else ml_output
+    
+    if return_scaler:
+        return final_output, scaler
+    return final_output
 
-    return ml_output
 
 
