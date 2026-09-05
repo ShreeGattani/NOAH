@@ -10,7 +10,6 @@ import json
 # CONFIGURATION
 # ============================================================
 
-WINDOW_SIZE = 20
 
 # Number of previous readings used by rule-based detectors
 ROLLING_WINDOW = 5
