@@ -55,7 +55,7 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobile }) => {
   };
 
   return (
-    <header className="h-16 border-b border-slate-200 bg-white px-4 sm:px-6 flex items-center justify-between z-20 shrink-0 sticky top-0 shadow-xs">
+    <header className="h-16 border-b border-sky-200/60 bg-white/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between z-20 shrink-0 sticky top-0 shadow-xs">
       {/* Left: Mobile Toggle & Page Title */}
       <div className="flex items-center gap-3">
         <button
@@ -138,7 +138,7 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobile }) => {
                 </div>
 
                 <p className="text-[11px] text-slate-500 mb-3 font-sans">
-                  Select a scenario to verify how NOAH distinguishes regional meteorological fronts from isolated sensor faults.
+                  Select a scenario to verify how Noah&apos;s Ark distinguishes regional meteorological fronts from isolated sensor faults.
                 </p>
 
                 <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">

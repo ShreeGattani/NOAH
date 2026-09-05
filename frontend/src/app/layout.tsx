@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "@/components/providers/ClientProviders";
 
@@ -13,14 +13,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "NOAH — Networked Observation & Anomaly Intelligence",
+  title: "Noah's Ark — Real-Time Weather Station Quality Control",
   description: "Making Weather Data Trustworthy. Real-time meteorological intelligence for Automatic Weather Stations (AWS).",
-  keywords: ["AWS", "Weather Stations", "Anomaly Detection", "Meteorology", "NOAH", "Machine Learning", "IMD"],
+  keywords: ["AWS", "Weather Stations", "Anomaly Detection", "Meteorology", "Noah's Ark", "Machine Learning", "IMD"],
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: "/noah_emblem.png",
+    shortcut: "/noah_emblem.png",
+    apple: "/noah_emblem.png",
   },
 };
 
@@ -32,9 +38,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#F8FAFC] text-slate-900">
+      <body className="min-h-full flex flex-col bg-[#E2EDF8] text-slate-900">
         <ClientProviders>{children}</ClientProviders>
       </body>
     </html>

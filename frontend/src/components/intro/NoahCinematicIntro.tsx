@@ -11,13 +11,13 @@ interface NoahCinematicIntroProps {
 
 export const NoahCinematicIntro: React.FC<NoahCinematicIntroProps> = ({ onComplete }) => {
   const [bootTextIndex, setBootTextIndex] = useState(0);
-  const letters = ['N', 'O', 'A', 'H'];
+  const letters = ["N", "o", "a", "h", "'", "s", " ", "A", "r", "k"];
 
   const bootMessages = [
     'INITIALIZING NATIONAL AWS NETWORK...',
     'ESTABLISHING SPATIAL CORRELATION MESH...',
     'CALIBRATING ANOMALY INTELLIGENCE ENGINE...',
-    'NOAH ONLINE // LAUNCHING PORTAL'
+    "NOAH'S ARK ONLINE // LAUNCHING PORTAL"
   ];
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export const NoahCinematicIntro: React.FC<NoahCinematicIntroProps> = ({ onComple
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0F2C59] text-white overflow-hidden select-none"
     >
       {/* Central Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-md">
+      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-lg">
         {/* Logo */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -53,31 +53,31 @@ export const NoahCinematicIntro: React.FC<NoahCinematicIntroProps> = ({ onComple
         >
           <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-white/40 shadow-lg">
             <Image
-              src="/logo.png"
-              alt="NOAH Logo"
+              src="/noah_emblem.png"
+              alt="Noah's Ark Logo"
               fill
-              className="object-cover"
+              className="object-contain"
               priority
               sizes="80px"
             />
           </div>
         </motion.div>
 
-        {/* Letter-by-Letter NOAH Reveal */}
-        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
+        {/* Letter-by-Letter Reveal */}
+        <div className="flex items-center justify-center flex-nowrap gap-0.5 sm:gap-1.5 mb-2">
           {letters.map((char, index) => (
             <motion.span
               key={index}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
-                duration: 0.35,
-                delay: 0.15 + index * 0.15,
+                duration: 0.25,
+                delay: 0.08 + index * 0.07,
                 ease: 'easeOut'
               }}
-              className="text-5xl sm:text-7xl font-bold tracking-wider text-white"
+              className="text-4xl sm:text-6xl font-bold tracking-tight text-white inline-block"
             >
-              {char}
+              {char === ' ' ? '\u00A0' : char}
             </motion.span>
           ))}
         </div>
@@ -89,10 +89,7 @@ export const NoahCinematicIntro: React.FC<NoahCinematicIntroProps> = ({ onComple
           transition={{ duration: 0.4, delay: 0.9 }}
           className="space-y-1 mb-6"
         >
-          <p className="text-xs sm:text-sm tracking-wider text-sky-200 font-semibold uppercase">
-            Networked Observation & Anomaly Intelligence
-          </p>
-          <p className="text-xs text-slate-300 font-sans">
+          <p className="text-sm sm:text-base text-sky-200 font-medium font-sans">
             Making Weather Data Trustworthy.
           </p>
         </motion.div>

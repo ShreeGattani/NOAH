@@ -1,121 +1,142 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Radio, MapPin, Activity } from 'lucide-react';
-import { NoahCinematicIntro } from '@/components/intro/NoahCinematicIntro';
-import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, Radio, MapPin } from 'lucide-react';
 
-export default function LandingPage() {
-  const [showIntro, setShowIntro] = useState(true);
+const TYPEWRITER_WORDS = [
+  'Trustworthy.',
+  'Accurate.',
+  'Reliable.',
+  'Actionable.',
+];
+
+function TypewriterHeadline() {
+  const [wordIndex, setWordIndex] = useState(0);
+  const [displayText, setDisplayText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentFullWord = TYPEWRITER_WORDS[wordIndex];
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting) {
+      if (displayText.length < currentFullWord.length) {
+        timer = setTimeout(() => {
+          setDisplayText(currentFullWord.slice(0, displayText.length + 1));
+        }, 90);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2200);
+      }
+    } else {
+      if (displayText.length > 0) {
+        timer = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1));
+        }, 45);
+      } else {
+        setIsDeleting(false);
+        setWordIndex((prev) => (prev + 1) % TYPEWRITER_WORDS.length);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, wordIndex]);
 
   return (
-    <>
-      {/* Letter-by-Letter Cinematic Intro Overlay */}
-      <AnimatePresence>
-        {showIntro && (
-          <NoahCinematicIntro onComplete={() => setShowIntro(false)} />
-        )}
-      </AnimatePresence>
+    <span className="text-blue-600 inline-flex items-center">
+      <span>{displayText || '\u00A0'}</span>
+      <span className="inline-block w-[3px] sm:w-[4px] md:w-[5px] h-[0.85em] bg-blue-600 ml-1.5 rounded-xs animate-typewriter-cursor align-middle" />
+    </span>
+  );
+}
 
-      {/* Main Landing View */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showIntro ? 0 : 1 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between"
-      >
-        {/* Top Government-Style Header Bar */}
-        <header className="bg-white border-b border-slate-200 shadow-2xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3.5">
-              <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-slate-200 shadow-xs">
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen text-slate-900 flex flex-col justify-between relative overflow-hidden bg-[#E2EDF8]">
+        {/* User-Uploaded Meteorological Background Image */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+          <Image
+            src="/landing_bg.png"
+            alt="Global Meteorological Observation Satellite & AWS Network"
+            fill
+            priority
+            quality={95}
+            className="object-cover object-center"
+          />
+          {/* Subtle atmospheric gradients for depth and contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-sky-900/10 via-transparent to-[#071322]/60" />
+        </div>
+
+        {/* Top Navigation - Seamless Transparent on Background */}
+        <header className="relative z-10 bg-transparent w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative w-11 h-11">
                 <Image
-                  src="/logo.png"
-                  alt="NOAH Logo"
+                  src="/noah_emblem.png"
+                  alt="Noah's Ark Logo"
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   priority
                   sizes="44px"
                 />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-xl text-slate-900 tracking-wide">NOAH</span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-800">
-                    IMD AWS PORTAL
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 font-sans">
-                  Networked Observation & Anomaly Intelligence
-                </p>
-              </div>
+              <span className="font-space-grotesk font-semibold text-2xl text-[#0B2144] tracking-tight">Noah&apos;s Ark</span>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                SYSTEM OPERATIONAL
-              </span>
-              <Link
-                href="/dashboard"
-                className="text-xs font-bold px-4 py-2 rounded-md bg-blue-700 hover:bg-blue-800 text-white transition-colors shadow-xs flex items-center gap-1.5"
-              >
-                <span>Launch Dashboard</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+            <Link
+              href="/dashboard"
+              className="text-xs font-bold px-4 py-2 rounded-md bg-[#0F2C59] hover:bg-[#091D3C] text-white transition-colors shadow-sm flex items-center gap-1.5"
+            >
+              <span>Launch Dashboard</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </header>
 
-        {/* Hero Banner in Deep IMD Navy */}
-        <section className="bg-[#0F2C59] text-white py-16 sm:py-20 px-4 sm:px-6 border-b border-[#091E3A]">
+        {/* Hero Section */}
+        <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 flex-1 flex items-center justify-center">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-sky-200 mb-6 font-medium">
-              <Activity className="w-3.5 h-3.5 text-sky-300" />
-              <span>Automatic Weather Station (AWS) Real-Time Quality Control</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-5 font-sans leading-tight">
-              Making Weather Data <span className="text-sky-300">Trustworthy.</span>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight mb-6 font-sans leading-tight text-[#0B2144]">
+              Making Weather Data <br className="hidden sm:inline" />
+              <TypewriterHeadline />
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-200 max-w-2xl mx-auto font-sans mb-8 leading-relaxed">
+            <p className="text-base sm:text-lg text-slate-700 max-w-2xl mx-auto font-sans mb-10 leading-relaxed font-medium">
               Real-time monitoring and anomaly intelligence platform for meteorological networks.
               Instantly differentiate genuine regional weather fronts from isolated sensor hardware faults.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/dashboard"
-                className="w-full sm:w-auto px-7 py-3 rounded-md bg-sky-400 hover:bg-sky-300 text-slate-950 font-bold text-sm tracking-wide transition-colors shadow-sm flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-7 py-3 rounded-md bg-[#0F2C59] hover:bg-[#091D3C] text-white font-bold text-sm tracking-wide transition-colors shadow-md flex items-center justify-center gap-2"
               >
-                <Radio className="w-4 h-4 text-slate-950" />
+                <Radio className="w-4 h-4 text-white" />
                 <span>Enter Command Center</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
               <Link
                 href="/stations"
-                className="w-full sm:w-auto px-6 py-3 rounded-md bg-white/10 hover:bg-white/15 border border-white/25 text-white font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 rounded-md bg-white/70 hover:bg-white/95 border border-slate-300/80 text-slate-800 font-semibold text-sm transition-colors flex items-center justify-center gap-2 backdrop-blur-md shadow-xs"
               >
-                <MapPin className="w-4 h-4 text-sky-300" />
+                <MapPin className="w-4 h-4 text-blue-600" />
                 <span>Explore 12 AWS Stations</span>
               </Link>
             </div>
           </div>
         </section>
 
-
-
-        {/* Official Footer */}
-        <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        {/* Official Footer - Seamless on Background */}
+        <footer className="relative z-10 bg-transparent py-4 text-center text-xs text-slate-300/80 font-mono">
           <div className="max-w-7xl mx-auto px-4">
-            NOAH Platform &bull; Networked Observation & Anomaly Intelligence &bull; IMD-Aligned Meteorological System
+            Noah&apos;s Ark &bull; Real-Time AWS Quality Control &bull; Meteorological Intelligence Grid
           </div>
         </footer>
-      </motion.div>
-    </>
+    </div>
   );
 }

@@ -63,27 +63,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
     <aside className="w-64 h-full bg-[#0F2C59] border-r border-[#091E3A] flex flex-col justify-between shrink-0 select-none z-30 text-white">
       {/* Brand Header */}
       <div>
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-3 group" onClick={onCloseMobile}>
-            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-white/20 shadow-md">
+        <div className="p-4 border-b border-white/10 flex items-center justify-center">
+          <Link href="/dashboard" className="flex items-center justify-center group" onClick={onCloseMobile}>
+            <div className="relative w-14 h-14 rounded-full overflow-hidden border border-white/30 shadow-md bg-white hover:scale-105 transition-transform flex items-center justify-center p-2">
               <Image
-                src="/logo.png"
-                alt="NOAH Logo"
+                src="/noah_emblem.png"
+                alt="Noah's Ark Logo"
                 fill
-                className="object-cover"
-                sizes="40px"
+                className="object-contain p-1.5"
+                sizes="56px"
               />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-lg tracking-wider text-white">NOAH</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-900 border border-sky-600 text-sky-200 font-semibold">
-                  IMD MET
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-300 font-sans tracking-tight">
-                Network Intelligence
-              </p>
             </div>
           </Link>
         </div>
