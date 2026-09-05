@@ -1,7 +1,7 @@
-# NOAH — Networked Observation & Anomaly Intelligence
+# Noah's Ark — Real-Time Weather Station Anomaly Intelligence
 
 > **Making Weather Data Trustworthy.**  
-> Real-time intelligent monitoring & anomaly detection platform for Automatic Weather Stations (AWS).
+> Real-time monitoring and anomaly detection platform for Automatic Weather Stations (AWS).
 
 ---
 
