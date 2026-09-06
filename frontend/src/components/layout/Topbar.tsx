@@ -25,6 +25,7 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobile }) => {
   const { scenarioId, setScenario, isPlaying, togglePlay, resetDemo, currentScenario } = useDemo();
   const [timeStr, setTimeStr] = useState<string>('');
   const [isDemoDropdownOpen, setIsDemoDropdownOpen] = useState(false);
+  const [isReplaying, setIsReplaying] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -38,8 +39,27 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobile }) => {
         }) + ' IST'
       );
     };
+
+    const fetchReplayStatus = async () => {
+      try {
+        const res = await fetch('/api/backend/replay/status');
+        if (res.ok) {
+          const data = await res.json();
+          setIsReplaying(data.running);
+        }
+      } catch (e) {
+        // Ignore network errors
+      }
+    };
+
     updateTime();
-    const timer = setInterval(updateTime, 1000);
+    fetchReplayStatus();
+    
+    const timer = setInterval(() => {
+      updateTime();
+      fetchReplayStatus();
+    }, 2000);
+    
     return () => clearInterval(timer);
   }, []);
 
@@ -90,93 +110,62 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobile }) => {
           <LiveIndicator label="AWS NETWORK LIVE" />
         </div>
 
-        {/* Interactive Demo Mode Trigger */}
-        <div className="relative">
-          <button
-            onClick={() => setIsDemoDropdownOpen(prev => !prev)}
-            className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-md bg-blue-50 border border-blue-300 text-blue-900 hover:bg-blue-100 transition-colors shadow-xs cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span className="font-semibold hidden sm:inline">Scenario:</span>
-            <span className="truncate max-w-[120px] sm:max-w-[160px] font-bold">
-              S{scenarioId} ({currentScenario.title.split(':')[1]?.trim() || 'Scenario'})
-            </span>
-            <Sliders className="w-3.5 h-3.5 text-blue-500" />
-          </button>
-
-          {/* Demo Dropdown */}
-          {isDemoDropdownOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsDemoDropdownOpen(false)}
-              />
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg bg-white border border-slate-200 shadow-xl z-50 p-3 text-slate-800">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-blue-900">
-                      Demonstration Scenarios
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={togglePlay}
-                      className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
-                      title={isPlaying ? 'Pause Simulation' : 'Resume Simulation'}
-                    >
-                      {isPlaying ? <Pause className="w-3.5 h-3.5 text-amber-600" /> : <Play className="w-3.5 h-3.5 text-emerald-600" />}
-                    </button>
-                    <button
-                      onClick={resetDemo}
-                      className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
-                      title="Reset to Scenario 1"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-blue-600" />
-                    </button>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-slate-500 mb-3 font-sans">
-                  Select a scenario to verify how Noah&apos;s Ark distinguishes regional meteorological fronts from isolated sensor faults.
-                </p>
-
-                <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-                  {DEMO_SCENARIOS.map((scenario) => {
-                    const isSelected = scenario.id === scenarioId;
-                    return (
-                      <button
-                        key={scenario.id}
-                        onClick={() => {
-                          setScenario(scenario.id);
-                          setIsDemoDropdownOpen(false);
-                        }}
-                        className={`w-full text-left p-2.5 rounded-md border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-blue-50 border-blue-300 text-blue-900'
-                            : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-xs font-bold">
-                            {scenario.title}
-                          </span>
-                          {isSelected && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-600 text-white font-bold">
-                              ACTIVE
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 leading-tight">
-                          {scenario.description}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
+        {/* Live Replay Controls */}
+        <div className="flex items-center gap-2">
+          {!isReplaying ? (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/backend/replay/start', { method: 'POST' });
+                  if (res.ok) {
+                    setIsReplaying(true);
+                  } else {
+                    alert('Failed to start replay');
+                  }
+                } catch (e) {
+                  alert('Failed to start replay');
+                }
+              }}
+              className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-900 hover:bg-emerald-100 transition-colors shadow-xs cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="font-semibold hidden sm:inline">Start Replay</span>
+            </button>
+          ) : (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/backend/replay/stop', { method: 'POST' });
+                  if (res.ok) {
+                    setIsReplaying(false);
+                  } else {
+                    alert('Failed to stop replay');
+                  }
+                } catch (e) {
+                  alert('Failed to stop replay');
+                }
+              }}
+              className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-md bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 transition-colors shadow-xs cursor-pointer"
+            >
+              <Pause className="w-3.5 h-3.5 text-amber-600" />
+              <span className="font-semibold hidden sm:inline">Stop Replay</span>
+            </button>
           )}
+          
+          <button
+            onClick={async () => {
+              try {
+                await fetch('/api/backend/replay/surge-faults', { method: 'POST' });
+                alert('Fault surge initiated!');
+              } catch (e) {
+                alert('Failed to surge faults');
+              }
+            }}
+            className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-md bg-red-50 border border-red-300 text-red-900 hover:bg-red-100 transition-colors shadow-xs cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-red-600" />
+            <span className="font-semibold hidden sm:inline">Surge Faults</span>
+          </button>
         </div>
       </div>
     </header>

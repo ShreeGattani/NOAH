@@ -119,6 +119,45 @@ def print_backend_response(response):
 
 
 # ============================================================
+# FAULT INJECTION
+# ============================================================
+
+import random
+import tempfile
+from pathlib import Path
+SURGE_FILE = Path(tempfile.gettempdir()) / "noah_surge_faults.flag"
+surge_readings_left = 0
+
+def apply_fault_if_needed(record):
+    global surge_readings_left
+    
+    if SURGE_FILE.exists():
+        SURGE_FILE.unlink(missing_ok=True)
+        # 120 readings = 10 full network cycles. 15% fault prob = ~18 faults total during surge.
+        surge_readings_left = 120
+        print("⚡ FAULT SURGE DETECTED! Spiking fault probability for next 120 readings.")
+        
+    fault_prob = 0.15 if surge_readings_left > 0 else 0.005
+    
+    if surge_readings_left > 0:
+        surge_readings_left -= 1
+        
+    if random.random() < fault_prob:
+        # Inject realistic, varying fault
+        fault_type = random.choice(["temp_spike", "humidity_drop"])
+        if fault_type == "temp_spike" and record.get("temperature") is not None:
+            spike = random.uniform(15.0, 35.0)
+            record["temperature"] = round(record["temperature"] + spike, 2)
+            print(f"⚠ INJECTED FAULT: Temperature Spike (+{spike:.1f}°C)")
+        elif fault_type == "humidity_drop" and record.get("humidity") is not None:
+            drop = random.uniform(30.0, 60.0)
+            record["humidity"] = max(0.0, round(record["humidity"] - drop, 2))
+            print(f"⚠ INJECTED FAULT: Humidity Drop (-{drop:.1f}%)")
+            
+    return record
+
+
+# ============================================================
 # SEND ONE READING
 # ============================================================
 
@@ -131,6 +170,7 @@ def send_reading(record):
         False -> request failed
     """
 
+    record = apply_fault_if_needed(dict(record))
     payload = build_payload(record)
 
     url = f"{BACKEND_URL.rstrip('/')}/{INGEST_ENDPOINT.lstrip('/')}"
@@ -198,12 +238,24 @@ def run_replay(
     print("Loading and cleaning 2024 data...")
 
     try:
-        records = get_clean_data(
-            year=YEAR,
-            max_rows=None,
-            station_id=station_id,
-            archive_dir=archive_dir,
-        )
+        import json
+        cache_path = Path(archive_dir) / "cleaned_records.json"
+        
+        if cache_path.exists() and not station_id:
+            print("Loading cleaned dataset from cache...")
+            with open(cache_path, "r") as f:
+                records = json.load(f)
+        else:
+            records = get_clean_data(
+                year=YEAR,
+                max_rows=None,
+                station_id=station_id,
+                archive_dir=archive_dir,
+            )
+            if not station_id:
+                print("Saving cleaned dataset to cache...")
+                with open(cache_path, "w") as f:
+                    json.dump(records, f)
 
     except FileNotFoundError as exc:
         print()
@@ -223,17 +275,20 @@ def run_replay(
         return
 
     # --------------------------------------------------------
-    # Sort chronologically
+    # Sort chronologically and group by timestamp
     # --------------------------------------------------------
 
+    from itertools import groupby
+
     records.sort(key=lambda x: x.get("timestamp", ""))
+    grouped = [(ts, list(group)) for ts, group in groupby(records, key=lambda x: x.get("timestamp", ""))]
 
     if limit is not None:
-        records = records[:limit]
+        grouped = grouped[:limit]
 
-    total = len(records)
+    total_groups = len(grouped)
 
-    print(f"✓ Cleaned records available: {total}")
+    print(f"✓ Cleaned timestamp intervals available: {total_groups}")
 
     print()
     print("Starting live replay...")
@@ -245,24 +300,25 @@ def run_replay(
     # --------------------------------------------------------
 
     try:
-        for index, record in enumerate(records, start=1):
-
-            print_record(index, total, record)
+        for index, (ts, group_records) in enumerate(grouped, start=1):
 
             print()
-            print("→ Sending observation to backend...")
+            print("=" * 65)
+            print(f"TIMESTAMP {index}/{total_groups} | {ts}")
+            print(f"Sending {len(group_records)} station observations...")
+            print("=" * 65)
 
-            success = send_reading(record)
+            for record in group_records:
+                success = send_reading(record)
+                if not success:
+                    print(f"⚠ Observation for {record.get('station_id')} was not accepted.")
 
-            if not success:
-                print("⚠ Observation was not accepted.")
-
-            # Don't wait after the final record.
-            if index < total:
+            # Don't wait after the final group.
+            if index < total_groups:
 
                 print()
                 print(
-                    f"Next observation in {interval} seconds..."
+                    f"Next timestamp in {interval} seconds..."
                 )
 
                 time.sleep(interval)

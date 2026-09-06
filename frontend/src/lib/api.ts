@@ -5,12 +5,7 @@ import {
   computeNetworkSummary
 } from './adapter';
 import { Station, Anomaly, StationReading, NetworkSummary } from '@/types';
-import {
-  INITIAL_STATIONS,
-  INITIAL_ANOMALIES,
-  INITIAL_NETWORK_SUMMARY,
-  generateStationTimeSeries
-} from '@/data/mockData';
+
 
 // If in browser, use Next.js internal proxy `/api/backend` which avoids any CORS issues.
 // If in server-side render, use backend URL directly.
@@ -50,8 +45,8 @@ async function safeFetch<T>(endpoint: string): Promise<T | null> {
 export async function getStations(): Promise<Station[]> {
   const data = await safeFetch<any[]>('/stations');
 
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    return INITIAL_STATIONS;
+  if (!data || !Array.isArray(data)) {
+    return [];
   }
 
   return data.map((raw) => adaptBackendStation(raw));
@@ -64,10 +59,7 @@ export async function getStation(stationId: string): Promise<Station | null> {
   const data = await safeFetch<any>(`/stations/${stationId}`);
 
   if (!data) {
-    const fallback = INITIAL_STATIONS.find(
-      (s) => s.id.toLowerCase() === stationId.toLowerCase()
-    );
-    return fallback || null;
+    return null;
   }
 
   return adaptBackendStation(data);
@@ -82,8 +74,8 @@ export async function getStationReadings(
 ): Promise<StationReading[]> {
   const data = await safeFetch<any[]>(`/stations/${stationId}/readings?hours=${hours}`);
 
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    return generateStationTimeSeries(stationId, hours);
+  if (!data || !Array.isArray(data)) {
+    return [];
   }
 
   return data.map((raw) => adaptBackendReading(raw));
@@ -95,8 +87,8 @@ export async function getStationReadings(
 export async function getAnomalies(stations: Station[] = []): Promise<Anomaly[]> {
   const data = await safeFetch<any[]>('/anomalies');
 
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    return INITIAL_ANOMALIES;
+  if (!data || !Array.isArray(data)) {
+    return [];
   }
 
   return data.map((raw) => adaptBackendAnomaly(raw, stations));
@@ -120,10 +112,7 @@ export async function getAnomaly(
   const data = await safeFetch<any>(`/anomalies/${numericId}`);
 
   if (!data) {
-    const fallback = INITIAL_ANOMALIES.find(
-      (a) => a.id.toLowerCase() === String(anomalyId).toLowerCase()
-    );
-    return fallback || null;
+    return null;
   }
 
   return adaptBackendAnomaly(data, stations);
@@ -133,8 +122,5 @@ export async function getAnomaly(
  * Computes or retrieves the NetworkSummary
  */
 export function getNetworkSummary(stations: Station[], anomalies: Anomaly[]): NetworkSummary {
-  if (stations.length === 0) {
-    return INITIAL_NETWORK_SUMMARY;
-  }
   return computeNetworkSummary(stations, anomalies);
 }

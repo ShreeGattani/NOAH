@@ -7,7 +7,8 @@ from backend.app.routers import (
     readings,
     stations,
     anomalies,
-    websocket
+    websocket,
+    replay
 )
 
 
@@ -20,6 +21,7 @@ app.include_router(readings.router)
 app.include_router(stations.router)
 app.include_router(anomalies.router)
 app.include_router(websocket.router)
+app.include_router(replay.router)
 
 
 @app.get("/health")

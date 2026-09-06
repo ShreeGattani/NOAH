@@ -81,12 +81,17 @@ async def post_readings(reading: schemas.WeatherReading, db: Session = Depends(g
 
     db.commit()
 
-    data = {
-        "reading": reading.model_dump(),
-        "analysis": result.model_dump()
+    packet = {
+        "type": "ANOMALY_DETECTED" if result.is_anomaly else "READING_UPDATE",
+        "stationId": reading.station_id,
+        "timestamp": reading.timestamp.isoformat(),
+        "data": {
+            "reading": reading.model_dump(mode="json"),
+            "analysis": result.model_dump(mode="json")
+        }
     }
 
-    await manager.broadcast(data)
+    await manager.broadcast(packet)
 
     return result
 

@@ -56,44 +56,27 @@ export default function StationInvestigationPage({ params }: StationPageProps) {
   );
 
   // Timeline events for this station
-  const timelineEvents = [
-    {
-      time: '18:22:31',
-      date: 'Today',
-      type: station.status === 'CRITICAL' ? 'SUDDEN SPIKE' : 'NORMAL TELEMETRY',
-      severity: station.status === 'CRITICAL' ? 'CRITICAL' : 'LOW',
-      confidence: station.status === 'CRITICAL' ? '96%' : '99%',
-      details: station.status === 'CRITICAL' ? 'Temperature jumped +31.8°C within 15min. Spatial check failed.' : 'Continuous normal readings across all three channels.',
-      isAnomaly: station.status === 'CRITICAL'
-    },
-    {
-      time: '18:15:12',
+  const timelineEvents = stationAnomalies.map(a => ({
+      time: new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      date: new Date(a.timestamp).toLocaleDateString(),
+      type: (a.typeLabel || 'ANOMALY DETECTED').toUpperCase(),
+      severity: a.severity,
+      confidence: `${a.confidence}%`,
+      details: a.classificationReason || a.recommendation || 'Abnormal telemetry detected.',
+      isAnomaly: true
+  }));
+  
+  if (timelineEvents.length === 0) {
+     timelineEvents.push({
+      time: station.lastUpdated !== 'Just now' ? station.lastUpdated : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       date: 'Today',
       type: 'NORMAL STREAM',
       severity: 'LOW',
       confidence: '99%',
-      details: 'Baseline ambient readings within 0.3°C variance.',
+      details: 'Baseline ambient readings within acceptable variance. Operations nominal.',
       isAnomaly: false
-    },
-    {
-      time: '17:42:03',
-      date: 'Today',
-      type: 'NORMAL STREAM',
-      severity: 'LOW',
-      confidence: '98%',
-      details: 'Solar cycle transition nominal. Barometric pressure steady.',
-      isAnomaly: false
-    },
-    {
-      time: '16:21:11',
-      date: 'Today',
-      type: 'SENSOR DRIFT WARNING',
-      severity: 'MEDIUM',
-      confidence: '81%',
-      details: 'Capacitive humidity film exhibited slight negative bias (-4.8%).',
-      isAnomaly: true
-    }
-  ];
+     });
+  }
 
   return (
     <AppShell>
@@ -122,7 +105,7 @@ export default function StationInvestigationPage({ params }: StationPageProps) {
               </div>
               <h1 className="text-2xl font-bold text-slate-900 font-sans">{station.name}</h1>
               <p className="text-xs text-slate-500 font-mono mt-1">
-                {station.region}, {station.state} &bull; Coordinates: {station.latitude.toFixed(4)}°N, {station.longitude.toFixed(4)}°E &bull; Elevation: {station.elevation}m ASL
+                Coordinates: {station.latitude.toFixed(4)}°N, {station.longitude.toFixed(4)}°E &bull; Elevation: {station.elevation}m ASL
               </p>
             </div>
 

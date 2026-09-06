@@ -13,7 +13,12 @@ router = APIRouter(
 
 @router.get("")
 def get_stations(db: Session = Depends(get_db)):
-    stations = db.query(models.Station).all()
+    from sqlalchemy.orm import selectinload
+    stations = db.query(models.Station).options(
+        selectinload(models.Station.readings),
+        selectinload(models.Station.sensors).selectinload(models.Sensor.health),
+        selectinload(models.Station.anomalies)
+    ).all()
          
     return stations
 

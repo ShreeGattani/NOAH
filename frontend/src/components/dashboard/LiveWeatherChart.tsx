@@ -12,7 +12,7 @@ import {
   ReferenceLine
 } from 'recharts';
 import { GlassCard } from '../ui/GlassCard';
-import { generateStationTimeSeries } from '@/data/mockData';
+
 import { Station, StationReading } from '@/types';
 import { Thermometer, Droplets, Gauge, Activity, AlertCircle } from 'lucide-react';
 
@@ -31,8 +31,8 @@ export const LiveWeatherChart: React.FC<LiveWeatherChartProps> = ({
   const [readings, setReadings] = useState<StationReading[]>([]);
 
   useEffect(() => {
-    const series = generateStationTimeSeries(selectedStationId, timeRangeHours);
-    setReadings(series);
+    // Returning an empty array to render an empty chart frame until live telemetry buffers it
+    setReadings([]);
   }, [selectedStationId, timeRangeHours]);
 
   const selectedStation = stations.find(s => s.id === selectedStationId) || stations[0];

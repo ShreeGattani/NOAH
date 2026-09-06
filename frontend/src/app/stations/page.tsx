@@ -142,7 +142,6 @@ export default function StationsPage() {
                       </span>
                     </div>
                     <h3 className="text-sm font-bold text-slate-900 mt-0.5">{station.name}</h3>
-                    <p className="text-xs text-slate-500 font-sans">{station.region}, {station.state}</p>
                   </div>
                   <StatusBadge status={station.status} size="sm" />
                 </div>

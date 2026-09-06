@@ -8,6 +8,8 @@ interface EventAnalysisCardProps {
 }
 
 export const EventAnalysisCard: React.FC<EventAnalysisCardProps> = ({ analysis }) => {
+  if (!analysis) return null;
+
   const isSensorFault = analysis.type === 'SENSOR_FAULT';
   const isWeatherEvent = analysis.type === 'WEATHER_EVENT';
 
