@@ -10,92 +10,95 @@
 **NOAH** is a real-time mission-control platform designed for meteorological networks. It monitors Automatic Weather Stations (AWS) transmitting temperature, atmospheric pressure, and relative humidity telemetry, performing:
 - **Spatial / Cross-Sensor Consistency Checks** (distinguishing true regional weather events from isolated sensor hardware faults)
 - **Temporal & Physical Gradient Validation** (Clausius-Clapeyron, dT/dt rate thresholds)
-- **ML Anomaly Detection** (Spatial-Temporal Autoencoder + Isolation Forest)
+- **ML Anomaly Detection** (Spatial-Temporal + Isolation Forest)
 - **Sensor Health Scoring (0–100)** & Maintenance Dispatch
+
+This repository contains the full-stack system, including the Next.js frontend, FastAPI backend, and the Machine Learning pipeline.
 
 ---
 
-## ⚡ Tech Stack
+## 🏗️ Architecture & Tech Stack
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router, TypeScript)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) + Custom Navy Cyber Matrix tokens
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Charts**: [Recharts](https://recharts.org/)
-- **Geospatial Map**: [Leaflet](https://leafletjs.com/) & [React-Leaflet](https://react-leaflet.js.org/) with CartoDB Dark Matter tiles
-- **Icons**: [Lucide React](https://lucide.dev/)
+### 🧠 Machine Learning Engine (`/ml`)
+- **Models**: Spatial-Temporal Analysis, Isolation Forest for anomaly detection.
+- **Frameworks**: `scikit-learn`, `pandas`, `numpy`, `joblib`.
+- **Pipeline**: Automated training (`train.py`), anomaly fusion (`anomaly_fusion.py`), and model serving.
+
+### 🔌 Backend (`/backend`)
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python >= 3.11).
+- **Real-Time Data**: WebSocket streaming for live telemetry.
+- **Database**: PostgreSQL (via SQLAlchemy).
+
+### 🖥️ Frontend Mission Control (`/frontend`)
+- **Framework**: [Next.js](https://nextjs.org/) (App Router, TypeScript).
+- **Styling**: Tailwind CSS v4 + Custom Navy Cyber Matrix tokens.
+- **Visualizations**: Recharts, Framer Motion, React-Leaflet with CartoDB Dark Matter tiles.
+
+---
+
+## 📁 Repository Structure
+
+```text
+NOAH/
+├── backend/       # FastAPI application, API routes, and WebSocket endpoints
+├── data/          # Raw and processed datasets (e.g., 2024.csv, cleaned_records.json)
+├── frontend/      # Next.js interactive dashboard and UI components
+├── ml/            # Anomaly detection logic, model definitions, and fusion engine
+│   └── models/    # Serialized ML models (e.g., joblib/pickle)
+├── pyproject.toml # Python dependencies and project metadata
+└── scripts/       # Training, testing, and live replay scripts
+```
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
-```bash
-npm install
-```
+### 1. Prerequisites
+- **Node.js** (v18+)
+- **Python** (>= 3.11)
+- **[uv](https://docs.astral.sh/uv/)** (Fast Python package installer)
 
-### 2. Run the Development Server
+### 2. Setup the ML & Backend
+Clone the repository and install the Python dependencies:
 ```bash
+# Install dependencies using uv
+uv sync
+
+# (Optional) Train the models if needed
+uv run scripts/train.py
+
+# Start the FastAPI server
+cd backend
+uv run uvicorn app.main:app --reload --port 8000
+```
+The backend will be available at `http://localhost:8000`.
+
+### 3. Setup the Frontend
+Open a new terminal window:
+```bash
+cd frontend
+npm install
+
+# Setup environment variables
+cp .env.example .env.local # Update to point NEXT_PUBLIC_API_URL to the backend
+
+# Run the development server
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 🕹️ Interactive Hackathon Demo Controller
-
-The frontend includes an interactive **Demo Mode Controller** accessible via the topbar or the dashboard banner. You can switch between 5 scripted scenarios during presentations:
-
-1. **Scenario 1: Nominal Network Operation** — All 12 stations healthy and operating within baseline climatological bounds.
-2. **Scenario 2: Regional Weather Front** — Synchronized +3.2°C rise across 4 neighboring stations &rarr; Classified as **🟡 LIKELY WEATHER EVENT**.
-3. **Scenario 3: Severe Sudden Spike (Sensor Fault)** — Isolated +31.8°C jump at Delhi Palam (AWS_007) while Safdarjung and Jaipur remain nominal &rarr; Classified as **🔴 LIKELY SENSOR FAULT (96% Confidence)**.
-4. **Scenario 4: Frozen Sensor Telemetry** — Guwahati Borjhar (AWS_009) flatlines with 0.000°C variance for 3 hours &rarr; Classified as **FROZEN SENSOR FAULT**.
-5. **Scenario 5: Sensor Degradation Pattern** — Progressive health deterioration (95 &rarr; 87 &rarr; 74 &rarr; 61) triggering maintenance recommendation.
+Open [http://localhost:3000](http://localhost:3000) in your browser to access the Mission Control dashboard.
 
 ---
 
-## 📁 Architecture & Routes
+## 📡 Live Data Replay
 
-```text
-src/
-├── app/
-│   ├── layout.tsx              # Root layout with dark theme & ClientProviders
-│   ├── globals.css             # Navy palette tokens, glow utilities, dark leaflet styling
-│   ├── page.tsx                # Landing entry page ("Enter Command Center")
-│   ├── dashboard/page.tsx      # Main Mission Control: Metrics, India Map, Active Anomalies, Event Analysis, Live Chart, Health
-│   ├── stations/page.tsx       # 12 AWS Station Directory with search, status filters & sorting
-│   ├── stations/[id]/page.tsx  # Station Deep-Dive: Sensor metrics, 24h charts with anomaly dots, vertical timeline
-│   ├── anomalies/page.tsx      # Anomaly Feed & Archive with severity & type filtering
-│   ├── anomalies/[id]/page.tsx # Anomaly Root Cause: Why Flagged checklist, Observed vs Expected, Neighbor comparison table
-│   ├── analytics/page.tsx      # ML Model accuracy, false positive rate, anomalies by type, health distribution
-│   └── settings/page.tsx       # API/WS configuration & ML threshold sliders
-├── components/
-│   ├── dashboard/              # IndiaMap, ActiveAnomaliesPanel, EventAnalysisCard, LiveWeatherChart, SensorHealthOverview, DemoScenarioBanner
-│   ├── layout/                 # Sidebar, Topbar, AppShell
-│   ├── ui/                     # GlassCard, StatusBadge, SeverityBadge, HealthScore, AnimatedNumber, MetricCard, LiveIndicator, PageHeader
-│   └── providers/              # ClientProviders
-├── context/
-│   └── DemoContext.tsx         # Live simulation state & demo scenario switcher
-├── data/
-│   └── mockData.ts             # 12 realistic Indian AWS stations, 24h time-series generator, rich anomaly events
-├── lib/
-│   ├── api.ts                  # Data access layer (routes to mock or FastAPI based on env)
-│   ├── mockApi.ts              # In-memory mock data operations
-│   └── websocket.ts            # WebSocket telemetry client abstraction
-└── types/
-    └── index.ts                # TypeScript domain models
+To simulate a live stream of telemetry for the dashboard to consume, you can run the live replay script. This script loads historical dataset observations, processes them, and POSTs them to the backend exactly as a physical weather station would.
+
+```bash
+uv run scripts/live_replay.py --interval 3
 ```
 
+- `--interval`: Seconds to wait between transmitting observations.
+- `--station`: Optional station ID filter to only replay a specific location.
+- `--limit`: Stop replaying after a specified number of events.
+
 ---
-
-## 🔌 Connecting to Backend (FastAPI + WebSocket)
-
-When the backend is ready, simply update `.env.local` or environment variables:
-
-```env
-NEXT_PUBLIC_USE_MOCK_DATA=false
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws/live
-```
-
-The Data Access Layer in `src/lib/api.ts` and `src/lib/websocket.ts` will automatically connect to FastAPI REST and WebSocket endpoints without requiring any changes to UI components.

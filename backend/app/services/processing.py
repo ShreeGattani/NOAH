@@ -11,7 +11,7 @@ from ml.ml_detection import MLDetector
 from ml.anomaly_engine import AnomalyEngine
 from ml.preprocessing.features import extract_realtime_features, ML_FEATURE_FIELDS
 
-MODEL_DIR = Path(__file__).resolve().parent.parent.parent.parent / "models"
+MODEL_DIR = Path(__file__).resolve().parent.parent.parent.parent / "ml" / "models"
 MODEL_PATH = MODEL_DIR / "isolation_forest.joblib"
 SCALER_PATH = MODEL_DIR / "feature_scaler.pkl"
 

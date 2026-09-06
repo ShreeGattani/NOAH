@@ -21,8 +21,8 @@ import requests
 # CONFIGURATION
 # ============================================================
 
-# Placeholder for now - change this once we confirm the actual location.
-CSV_ARCHIVE_DIR = "."
+# The default location of the dataset
+CSV_ARCHIVE_DIR = str(Path(__file__).resolve().parent.parent / "data")
 
 YEAR = 2024
 
