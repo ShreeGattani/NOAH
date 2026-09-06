@@ -93,7 +93,7 @@ export default function AnomalyExplanationPage({ params }: AnomalyPageProps) {
                   {anomaly.stationId} &bull; {anomaly.stationName}
                   <ArrowUpRight className="w-3 h-3" />
                 </Link>
-                <span>&bull; Timestamp: {new Date(anomaly.timestamp).toLocaleString()}</span>
+                <span suppressHydrationWarning>&bull; Timestamp: {new Date(anomaly.timestamp).toLocaleString()}</span>
               </div>
             </div>
 
