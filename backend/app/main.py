@@ -6,7 +6,8 @@ from backend.app.models import models
 from backend.app.routers import (
     readings,
     stations,
-    anomalies
+    anomalies,
+    websocket
 )
 
 
@@ -18,6 +19,7 @@ app = FastAPI()
 app.include_router(readings.router)
 app.include_router(stations.router)
 app.include_router(anomalies.router)
+app.include_router(websocket.router)
 
 
 @app.get("/health")

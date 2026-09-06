@@ -103,6 +103,8 @@ Thumbs.db
 # Ignore large datasets
 data/
 datasets/
+*.db
+*.sqlite3
 
 # Ignore generated ML/model files
 models/*.pkl

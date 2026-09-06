@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ def get_station(station_id: str, db: Session = Depends(get_db)):
 
 @router.get("/{station_id}/readings")
 def get_station_readings(station_id: str, hours: int = 24, db: Session = Depends(get_db)):
-    cutoff = datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=hours)
 
     readings = (
         db.query(models.Reading)
