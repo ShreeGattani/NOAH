@@ -30,6 +30,7 @@ It returns STRICTLY the 22 features required for Machine Learning model input:
 
 import math
 from datetime import datetime
+import pandas as pd
 from typing import List, Dict, Any, Optional
 
 # The exact 22 ML feature field names required by Person 4 / ML model
@@ -146,10 +147,10 @@ def extract_ml_features(
     """
     if not records:
         if as_dataframe:
-            import pandas as pd
             res = pd.DataFrame()
             return (res, scaler) if return_scaler else res
         return ([], scaler) if return_scaler else []
+
 
     if max_rows and len(records) > max_rows:
         records = records[:max_rows]
@@ -276,4 +277,66 @@ def extract_ml_features(
     return final_output
 
 
+def extract_realtime_features(
+    current_reading,
+    history_readings,
+    station,
+    scaler
+):
+    """
+    Extract the same 22 ML features for one real-time reading.
 
+    The scaler must already be fitted on the training data (2018-2022).
+    """
+
+    # Convert database readings into the same format used by
+    # extract_ml_features()
+    records = []
+
+    for reading in history_readings:
+        records.append({
+            "timestamp": reading.timestamp.isoformat()
+                if isinstance(reading.timestamp, datetime)
+                else str(reading.timestamp),
+            "station_id": reading.station_id,
+            "station_name": station.station_name,
+            "latitude": station.latitude,
+            "longitude": station.longitude,
+            "altitude": station.altitude,
+            "temperature": reading.temperature,
+            "humidity": reading.humidity,
+            "pressure": reading.pressure,
+            "rainfall": reading.rainfall,
+            "wind_speed": reading.wind_speed,
+        })
+
+    # Add current reading last
+    records.append({
+        "timestamp": current_reading.timestamp.isoformat()
+            if isinstance(current_reading.timestamp, datetime)
+            else str(current_reading.timestamp),
+        "station_id": current_reading.station_id,
+        "station_name": station.station_name,
+        "latitude": station.latitude,
+        "longitude": station.longitude,
+        "altitude": station.altitude,
+        "temperature": current_reading.temperature,
+        "humidity": current_reading.humidity,
+        "pressure": current_reading.pressure,
+        "rainfall": current_reading.rainfall,
+        "wind_speed": current_reading.wind_speed,
+    })
+
+    # Reuse the existing feature-engineering logic and
+    # the already-fitted scaler.
+    features = extract_ml_features(
+        records,
+        scaler=scaler,
+        include_metadata=True
+    )
+
+    # The last record is the current real-time reading
+    return {
+        field: features[-1][field]
+        for field in ML_FEATURE_FIELDS
+    }

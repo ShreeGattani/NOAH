@@ -28,8 +28,8 @@ def parse_portuguese_float(val: Any) -> Optional[float]:
         return None
 
 
-def parse_inmet_timestamp(date_str: str, time_str: str) -> str:
-    """Combines INMET Date and Time into ISO 8601 UTC timestamp ('2024-01-01T00:00:00Z')."""
+def parse_inmet_timestamp(date_str: str, time_str: str) -> Optional[str]:
+    """Combines INMET Date and Time into ISO 8601 UTC timestamp ('2024-01-01T00:00:00Z'). Returns None if unparseable."""
     d_clean = date_str.strip().replace("/", "-")
     m_date1 = re.search(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})", d_clean)
     m_date2 = re.search(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", d_clean)
@@ -41,9 +41,9 @@ def parse_inmet_timestamp(date_str: str, time_str: str) -> str:
         dd, mm, yyyy = int(m_date2.group(1)), int(m_date2.group(2)), m_date2.group(3)
         iso_date = f"{yyyy}-{mm:02d}-{dd:02d}"
     else:
-        iso_date = "2024-01-01"
+        return None
 
-    t_digits = re.sub(r"\D", "", str(time_str))
+    t_digits = re.sub(r"\D", "", str(time_str or ""))
     if len(t_digits) == 1 or len(t_digits) == 2:
         hour = int(t_digits)
     elif len(t_digits) == 3:
@@ -51,7 +51,7 @@ def parse_inmet_timestamp(date_str: str, time_str: str) -> str:
     elif len(t_digits) >= 4:
         hour = int(t_digits[:2])
     else:
-        hour = 0
+        return None
 
     return f"{iso_date}T{hour % 24:02d}:00:00Z"
 
@@ -90,38 +90,62 @@ def parse_raw_row_to_dict(row: List[str], header: List[str]) -> Optional[Dict[st
         "timestamp": timestamp_iso,
         "station_id": str(station_id),
         "station_name": str(get_col_val(col_dict, "ESTACAO", "Nome") or f"STATION_{station_id}"),
-        "latitude": parse_portuguese_float(get_col_val(col_dict, "LATITUDE")) or 0.0,
-        "longitude": parse_portuguese_float(get_col_val(col_dict, "LONGITUDE")) or 0.0,
-        "altitude": parse_portuguese_float(get_col_val(col_dict, "ALTITUDE")) or 0.0,
+        "latitude": parse_portuguese_float(get_col_val(col_dict, "LATITUDE")),
+        "longitude": parse_portuguese_float(get_col_val(col_dict, "LONGITUDE")),
+        "altitude": parse_portuguese_float(get_col_val(col_dict, "ALTITUDE")),
         "temperature": parse_portuguese_float(temp_str),
         "humidity": parse_portuguese_float(rh_str),
         "pressure": parse_portuguese_float(press_str),
-        "rainfall": parse_portuguese_float(rain_str) or 0.0,
-        "wind_speed": parse_portuguese_float(wind_str) or 0.0
+        "rainfall": parse_portuguese_float(rain_str),
+        "wind_speed": parse_portuguese_float(wind_str)
     }
 
 
 def clean_and_flag_records(raw_records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Attaches missingness flags and data_quality_score to raw records."""
+    """Attaches missingness flags, 5-channel data_quality_score, and deduplicates records."""
     cleaned = []
+    seen_keys = set()
+    
     for r in raw_records:
         item = dict(r)
+        
         is_temp_miss = (item.get("temperature") is None)
         is_rh_miss = (item.get("humidity") is None)
         is_press_miss = (item.get("pressure") is None)
+        is_rain_miss = (item.get("rainfall") is None)
+        is_wind_miss = (item.get("wind_speed") is None)
+        is_time_miss = (item.get("timestamp") is None)
         
         item["is_missing_temp"] = is_temp_miss
         item["is_missing_humidity"] = is_rh_miss
         item["is_missing_pressure"] = is_press_miss
+        item["is_missing_rainfall"] = is_rain_miss
+        item["is_missing_wind_speed"] = is_wind_miss
+        item["is_missing_timestamp"] = is_time_miss
         
-        valid_count = 3 - (is_temp_miss + is_rh_miss + is_press_miss)
-        item["data_quality_score"] = round((valid_count / 3.0) * 100.0, 1)
+        # 5-channel telemetry data quality score
+        valid_count = 5 - (is_temp_miss + is_rh_miss + is_press_miss + is_rain_miss + is_wind_miss)
+        item["data_quality_score"] = round((valid_count / 5.0) * 100.0, 1)
+        
+        # Deduplication on (station_id, timestamp)
+        dedup_key = (item.get("station_id"), item.get("timestamp"))
+        if dedup_key in seen_keys and item.get("timestamp") is not None:
+            continue
+        seen_keys.add(dedup_key)
+        
         cleaned.append(item)
+        
     return cleaned
 
 
-def load_inmet_csv(file_path: str, max_rows: Optional[int] = None, station_filter: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Loads an INMET CSV file into standardized dictionaries."""
+
+def load_inmet_csv(
+    file_path: str, 
+    max_rows: Optional[int] = None, 
+    skip_rows: int = 0,
+    station_filter: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Loads an INMET CSV file into standardized dictionaries, optionally skipping initial valid rows."""
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Dataset file not found at: {file_path}")
 
@@ -133,36 +157,55 @@ def load_inmet_csv(file_path: str, max_rows: Optional[int] = None, station_filte
         except StopIteration:
             return records
 
-        count = 0
+        parsed_count = 0
+        kept_count = 0
         for row in reader:
-            if max_rows and count >= max_rows:
+            if max_rows and kept_count >= max_rows:
                 break
             rec = parse_raw_row_to_dict(row, header)
             if rec:
                 if station_filter and rec["station_id"] != station_filter:
                     continue
+                parsed_count += 1
+                if parsed_count <= skip_rows:
+                    continue
                 records.append(rec)
-                count += 1
+                kept_count += 1
 
     return records
 
 
-def load_year_range(archive_dir: str, start_year: int, end_year: int, max_rows: Optional[int] = None, station_filter: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Loads observations across a multi-year range."""
+def load_year_range(
+    archive_dir: str, 
+    start_year: int, 
+    end_year: int, 
+    max_rows: Optional[int] = None, 
+    skip_rows_per_year: int = 0,
+    station_filter: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Loads observations across a multi-year range with a 3-row warm-up buffer to eliminate boundary artifacts."""
     all_records = []
     years = list(range(start_year, end_year + 1))
     rows_per_year = (max_rows // len(years)) if (max_rows and len(years) > 0) else max_rows
 
+    # Warm-up buffer offset: load 3 extra historical rows prior to offset if skip_rows > 0
+    actual_skip = max(0, skip_rows_per_year - 3) if skip_rows_per_year > 0 else 0
+    actual_max = (rows_per_year + (skip_rows_per_year - actual_skip)) if rows_per_year else None
+
     for y in years:
         year_file = os.path.join(archive_dir, f"{y}.csv")
         if os.path.exists(year_file):
-            recs = load_inmet_csv(year_file, max_rows=rows_per_year, station_filter=station_filter)
+            recs = load_inmet_csv(
+                year_file, 
+                max_rows=actual_max, 
+                skip_rows=actual_skip, 
+                station_filter=station_filter
+            )
             all_records.extend(recs)
 
-    if max_rows and len(all_records) > max_rows:
-        all_records = all_records[:max_rows]
-
     return all_records
+
+
 
 
 def get_clean_data(
