@@ -3,14 +3,25 @@ from backend.app.models import models
 
 
 def update_sensor_health(db: Session, station_id: str):
+    sensors = (
+        db.query(models.Sensor)
+        .filter(models.Sensor.station_id == station_id)
+        .all()
+    )
+    
+    if not sensors:
+        return
+
+    window_size = sensors[0].health.health_window_size
+
     recent_readings = (
         db.query(models.Reading)
         .filter(models.Reading.station_id == station_id)
         .order_by(models.Reading.timestamp.desc())
-        .limit(100)
+        .limit(window_size)
         .all()
     )
-
+    
     total_readings = len(recent_readings)
 
     if total_readings == 0:
@@ -27,13 +38,7 @@ def update_sensor_health(db: Session, station_id: str):
         )
         .all()
     )
-
-    sensors = (
-        db.query(models.Sensor)
-        .filter(models.Sensor.station_id == station_id)
-        .all()
-    )
-
+    
     for sensor in sensors:
 
         anomaly_count = sum(
@@ -43,21 +48,16 @@ def update_sensor_health(db: Session, station_id: str):
         )
         
         normal_readings = total_readings - anomaly_count
-        
-        print(
-        "SENSOR:",
-        sensor.id,
-        sensor.sensor_type,
-        "HEALTH OBJECT:",
-        sensor.health,
-        "ANOMALIES:",
-        anomaly_count,
-        "TOTAL:",
-        total_readings
-        )
 
         sensor.health.normal_readings = normal_readings
 
         sensor.health.health_score = (
             normal_readings / total_readings
         ) * 100
+        
+        if sensor.health.health_score >= 80:
+            sensor.health.status = models.SensorHealthStatus.HEALTHY
+        elif sensor.health.health_score >= 50:
+            sensor.health.status = models.SensorHealthStatus.DEGRADED
+        else:
+            sensor.health.status = models.SensorHealthStatus.CRITICAL

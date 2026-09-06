@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -25,11 +27,20 @@ def get_station(station_id: str, db: Session = Depends(get_db)):
     return station
 
 @router.get("/{station_id}/readings")
-def get_station_readings(station_id: str, db: Session = Depends(get_db)):
-    readings = db.query(models.Reading).filter(models.Reading.station_id == station_id).all()
-          
-    return readings
+def get_station_readings(station_id: str, hours: int = 24, db: Session = Depends(get_db)):
+    cutoff = datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
 
+    readings = (
+        db.query(models.Reading)
+        .filter(
+            models.Reading.station_id == station_id,
+            models.Reading.timestamp >= cutoff
+        )
+        .order_by(models.Reading.timestamp.desc())
+        .all()
+    )
+
+    return readings
 
 
 @router.get("/{station_id}/anomalies")
