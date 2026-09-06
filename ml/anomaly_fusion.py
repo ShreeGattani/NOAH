@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Any
 
 
@@ -23,6 +24,8 @@ CRITICAL_THRESHOLD = 85.0
 
 def clamp_score(score: float) -> float:
     """Keep an anomaly score inside the 0-100 range."""
+    if score is None or math.isnan(score):
+        return 0.0
 
     return max(0.0, min(100.0, float(score)))
 
@@ -31,8 +34,7 @@ def spatial_score_to_100(score: float | None) -> float:
     """
     Convert P3 spatial evidence from 0-1 to 0-100.
     """
-
-    if score is None:
+    if score is None or math.isnan(score):
         return 0.0
 
     return clamp_score(float(score) * 100.0)
@@ -52,7 +54,7 @@ def cross_sensor_score_to_100(
     if not observation_available:
         return 0.0
 
-    if score is None:
+    if score is None or math.isnan(score):
         return 0.0
 
     return clamp_score(float(score) * 100.0)
@@ -94,7 +96,7 @@ def aggregate_spatial_score(
 
         score = variable_data.get("score")
 
-        if score is not None:
+        if score is not None and not math.isnan(float(score)):
             scores.append(
                 float(score)
             )
@@ -103,6 +105,7 @@ def aggregate_spatial_score(
         return 0.0
 
     return spatial_score_to_100(
+
         max(scores)
     )
 
@@ -125,7 +128,9 @@ def aggregate_cross_sensor_score(
         return 0.0, False
 
     scores = []
-    observation_available = False
+    observation_available = bool(
+        cross_sensor.get("independent_observation_available", False)
+    )
 
     for variable in (
         "temperature",
@@ -142,7 +147,7 @@ def aggregate_cross_sensor_score(
 
         score = variable_data.get("score")
 
-        if score is not None:
+        if score is not None and not math.isnan(float(score)):
             scores.append(
                 float(score)
             )

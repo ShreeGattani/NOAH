@@ -130,7 +130,7 @@ def detect_spikes(
     threshold: float = SPIKE_THRESHOLD
 ) -> pd.DataFrame:
     """
-    Detect sudden temperature spikes.
+    Detect sudden measurement spikes across temperature, humidity, and pressure.
 
     Uses the previous five readings to calculate:
         rolling mean
@@ -139,48 +139,38 @@ def detect_spikes(
     """
 
     data = df.copy()
+    spike_flags = pd.Series(False, index=data.index)
 
-    data["temp_rolling_mean"] = (
-        data.groupby("station_id")["temperature"]
-        .transform(
-            lambda x:
-            x.shift(1)
-            .rolling(ROLLING_WINDOW)
-            .mean()
+    for var in ["temperature", "humidity", "pressure", "wind_speed", "rainfall"]:
+        if var not in data.columns:
+            continue
+
+        rolling_mean = (
+            data.groupby("station_id")[var]
+            .transform(
+                lambda x:
+                x.shift(1)
+                .rolling(ROLLING_WINDOW)
+                .mean()
+            )
         )
-    )
 
-    data["temp_rolling_std"] = (
-        data.groupby("station_id")["temperature"]
-        .transform(
-            lambda x:
-            x.shift(1)
-            .rolling(ROLLING_WINDOW)
-            .std()
+        rolling_std = (
+            data.groupby("station_id")[var]
+            .transform(
+                lambda x:
+                x.shift(1)
+                .rolling(ROLLING_WINDOW)
+                .std()
+            )
+            .replace(0, np.nan)
         )
-    )
 
-    # Avoid division by zero when recent readings are identical
-    data["temp_rolling_std"] = (
-        data["temp_rolling_std"]
-        .replace(0, np.nan)
-    )
+        z_score = (data[var] - rolling_mean) / rolling_std
+        var_spike = (z_score.abs() > threshold).fillna(False)
+        spike_flags = spike_flags | var_spike
 
-    data["temp_z_score"] = (
-        (
-            data["temperature"]
-            - data["temp_rolling_mean"]
-        )
-        / data["temp_rolling_std"]
-    )
-
-    data["spike"] = (
-        data["temp_z_score"]
-        .abs()
-        > threshold
-    )
-
-    data["spike"] = data["spike"].fillna(False)
+    data["spike"] = spike_flags
 
     return data
 
@@ -196,34 +186,42 @@ def detect_frozen_sensor(
     """
     Detect a sensor that stops changing.
 
-    If temperature remains almost unchanged for several
+    If temperature, humidity, pressure, or wind speed remain almost unchanged for several
     consecutive readings, the sensor may be frozen.
     """
 
     data = df.copy()
+    frozen_flags = pd.Series(False, index=data.index)
 
-    data["temp_change"] = (
-        data.groupby("station_id")["temperature"]
-        .diff()
-    )
+    for var in ["temperature", "humidity", "pressure", "wind_speed"]:
+        if var not in data.columns:
+            continue
 
-    data["unchanged"] = (
-        data["temp_change"]
-        .abs()
-        < tolerance
-    )
-
-    data["frozen"] = (
-        data.groupby("station_id")["unchanged"]
-        .transform(
-            lambda x:
-            x.rolling(ROLLING_WINDOW)
-            .sum()
-            == ROLLING_WINDOW
+        var_change = (
+            data.groupby("station_id")[var]
+            .diff()
         )
-    )
 
-    data["frozen"] = data["frozen"].fillna(False)
+        data["_unchanged"] = (
+            var_change.abs() < tolerance
+        )
+
+        var_frozen = (
+            data.groupby("station_id")["_unchanged"]
+            .transform(
+                lambda x:
+                x.rolling(ROLLING_WINDOW)
+                .sum()
+                == ROLLING_WINDOW
+            )
+        )
+
+        frozen_flags = frozen_flags | var_frozen.fillna(False)
+
+    if "_unchanged" in data.columns:
+        data.drop(columns=["_unchanged"], inplace=True)
+
+    data["frozen"] = frozen_flags
 
     return data
 
@@ -238,59 +236,56 @@ def detect_drift(
     required_changes: int = DRIFT_REQUIRED_CHANGES
 ) -> pd.DataFrame:
     """
-    Detect persistent movement in one direction.
-
-    Example:
-
-        + + + + -
-
-    contains four meaningful positive changes in the
-    last five readings and indicates possible drift.
+    Detect persistent movement in one direction across weather parameters.
     """
 
     data = df.copy()
+    drift_flags = pd.Series(False, index=data.index)
 
-    if "temp_change" not in data.columns:
-        data["temp_change"] = (
-            data.groupby("station_id")["temperature"]
+    for var in ["temperature", "humidity", "pressure"]:
+        if var not in data.columns:
+            continue
+
+        var_change = (
+            data.groupby("station_id")[var]
             .diff()
         )
 
-    data["positive_change"] = (
-        data["temp_change"]
-        > change_threshold
-    )
+        data["_pos_change"] = (var_change > change_threshold)
+        data["_neg_change"] = (var_change < -change_threshold)
 
-    data["negative_change"] = (
-        data["temp_change"]
-        < -change_threshold
-    )
-
-    data["positive_count"] = (
-        data.groupby("station_id")["positive_change"]
-        .transform(
-            lambda x:
-            x.rolling(ROLLING_WINDOW)
-            .sum()
+        pos_count = (
+            data.groupby("station_id")["_pos_change"]
+            .transform(
+                lambda x:
+                x.rolling(ROLLING_WINDOW)
+                .sum()
+            )
         )
-    )
 
-    data["negative_count"] = (
-        data.groupby("station_id")["negative_change"]
-        .transform(
-            lambda x:
-            x.rolling(ROLLING_WINDOW)
-            .sum()
+        neg_count = (
+            data.groupby("station_id")["_neg_change"]
+            .transform(
+                lambda x:
+                x.rolling(ROLLING_WINDOW)
+                .sum()
+            )
         )
+
+        var_drift = (
+            (pos_count >= required_changes)
+            |
+            (neg_count >= required_changes)
+        )
+
+        drift_flags = drift_flags | var_drift.fillna(False)
+
+    data.drop(
+        columns=[c for c in ["_pos_change", "_neg_change"] if c in data.columns],
+        inplace=True,
     )
 
-    data["drift"] = (
-        (data["positive_count"] >= required_changes)
-        |
-        (data["negative_count"] >= required_changes)
-    )
-
-    data["drift"] = data["drift"].fillna(False)
+    data["drift"] = drift_flags
 
     return data
 
@@ -303,7 +298,7 @@ def detect_communication_failure(
     df: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Detect consecutive missing temperature readings.
+    Detect consecutive missing sensor readings.
 
     Three consecutive missing observations indicate
     a possible communication failure.
@@ -311,12 +306,20 @@ def detect_communication_failure(
 
     data = df.copy()
 
-    data["missing_temperature"] = (
-        data["temperature"].isna()
-    )
+    primary_vars = [
+        v for v in ["temperature", "humidity", "pressure"]
+        if v in data.columns
+    ]
+
+    if primary_vars:
+        data["missing_observation"] = (
+            data[primary_vars].isna().all(axis=1)
+        )
+    else:
+        data["missing_observation"] = False
 
     data["missing_count"] = (
-        data.groupby("station_id")["missing_temperature"]
+        data.groupby("station_id")["missing_observation"]
         .transform(
             lambda x:
             x.rolling(MISSING_WINDOW)
@@ -420,12 +423,12 @@ def detect_temporal_anomalies(
         +
 
         output["frozen"].astype(float)
-        * 0.25
+        * 0.85
 
         +
 
         output["communication_failure"].astype(float)
-        * 0.20
+        * 0.85
     )
 
     output["temporal_anomaly_score"] = (

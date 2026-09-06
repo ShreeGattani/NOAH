@@ -83,6 +83,7 @@ def parse_raw_row_to_dict(row: List[str], header: List[str]) -> Optional[Dict[st
     temp_str = get_col_val(col_dict, "TEMPERATURA DO AR - BULBO SECO, HORARIA (°C)", "TEMPERATURA DO AR - BULBO SECO (°C)", "TEMPERATURA")
     rh_str = get_col_val(col_dict, "UMIDADE RELATIVA DO AR, HORARIA (%)", "UMIDADE RELATIVA DO AR (%)", "UMIDADE RELATIVA")
     press_str = get_col_val(col_dict, "PRESSAO ATMOSFERICA AO NIVEL DA ESTACAO, HORARIA (mB)", "PRESSAO ATMOSFERICA")
+    dew_str = get_col_val(col_dict, "TEMPERATURA DO PONTO DE ORVALHO (°C)", "TEMPERATURA DO PONTO DE ORVALHO", "PONTO DE ORVALHO", "DEW POINT")
     rain_str = get_col_val(col_dict, "PRECIPITAÇÃO TOTAL, HORÁRIO (mm)", "PRECIPITACAO TOTAL (mm)", "PRECIPITACAO")
     wind_str = get_col_val(col_dict, "VENTO, VELOCIDADE HORARIA (m/s)", "VENTO, VELOCIDADE (m/s)", "VELOCIDADE")
 
@@ -96,6 +97,7 @@ def parse_raw_row_to_dict(row: List[str], header: List[str]) -> Optional[Dict[st
         "temperature": parse_portuguese_float(temp_str),
         "humidity": parse_portuguese_float(rh_str),
         "pressure": parse_portuguese_float(press_str),
+        "observed_dew_point": parse_portuguese_float(dew_str),
         "rainfall": parse_portuguese_float(rain_str),
         "wind_speed": parse_portuguese_float(wind_str)
     }

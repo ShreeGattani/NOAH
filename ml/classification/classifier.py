@@ -25,11 +25,11 @@ def classify_anomaly(
     if "frozen_sensor" in temporal_flags:
         return "FROZEN_SENSOR"
 
-    if "drift_detection" in temporal_flags:
-        return "SENSOR_DRIFT"
-
     if "spike_detection" in temporal_flags:
         return "SUDDEN_SPIKE"
+
+    if "drift_detection" in temporal_flags:
+        return "SENSOR_DRIFT"
 
     # Check spatial evidence for the core variables.
     for variable in ("temperature", "humidity", "pressure"):
