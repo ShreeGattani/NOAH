@@ -1,10 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import declarative_base, relationship
+from enum import Enum
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, UniqueConstraint, Enum as SQLEnum
+from sqlalchemy.orm import relationship
+from backend.app.database.database import Base
 
-Base = declarative_base()
-
+class SensorHealthStatus(str, Enum):
+    HEALTHY = "HEALTHY"
+    DEGRADED = "DEGRADED"
+    CRITICAL = "CRITICAL"
 
 class Station(Base):
     __tablename__ = "stations"
@@ -13,9 +17,6 @@ class Station(Base):
 
     station_id = Column(String, unique=True, nullable=False, index=True)
     station_name = Column(String, nullable=False)
-
-    region = Column(String)
-    state = Column(String)
 
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
@@ -57,18 +58,17 @@ class SensorHealth(Base):
     __tablename__ = "sensor_health"
 
     id = Column(Integer, primary_key=True, index=True)
+    sensor_id = Column(Integer, ForeignKey("sensors.id"), nullable=False, unique=True)
 
-    sensor_id = Column(
-        Integer,
-        ForeignKey("sensors.id"),
+    status = Column(
+        SQLEnum(SensorHealthStatus),
         nullable=False,
-        unique=True
+        default=SensorHealthStatus.HEALTHY
     )
 
     health_score = Column(Float, default=100.0)
-
     health_window_size = Column(Integer, default=100)
-    normal_readings = Column(Integer, default=100)
+    normal_readings = Column(Integer, default=0)
 
     sensor = relationship("Sensor", back_populates="health")
 
@@ -95,6 +95,9 @@ class Reading(Base):
     
     station = relationship("Station", back_populates="readings")
 
+class AnomalyClassification(str, Enum):
+    WEATHER_EVENT = "WEATHER_EVENT"
+    SENSOR_FAULT = "SENSOR_FAULT"
 
 class Anomaly(Base):
     __tablename__ = "anomalies"
@@ -110,6 +113,13 @@ class Anomaly(Base):
         index=True
     )
     
+    reading_id = Column(
+    Integer,
+    ForeignKey("readings.id"),
+    nullable=False,
+    index=True
+    )
+    
     sensor_id = Column(
     Integer,
     ForeignKey("sensors.id"),
@@ -123,6 +133,11 @@ class Anomaly(Base):
     anomaly_type = Column(String)
     severity = Column(String)
     confidence = Column(Float)
+    
+    classification = Column(SQLEnum(AnomalyClassification), nullable=True)
+    classification_reason = Column(String)
+
+    metric = Column(String)
 
     reason = Column(String)
     recommendation = Column(String)

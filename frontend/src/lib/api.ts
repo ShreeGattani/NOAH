@@ -1,83 +1,140 @@
-import { Station, Anomaly, NetworkSummary, StationReading, AnomalyFilterOptions } from '@/types';
-import * as mockApi from './mockApi';
+import {
+  adaptBackendStation,
+  adaptBackendReading,
+  adaptBackendAnomaly,
+  computeNetworkSummary
+} from './adapter';
+import { Station, Anomaly, StationReading, NetworkSummary } from '@/types';
+import {
+  INITIAL_STATIONS,
+  INITIAL_ANOMALIES,
+  INITIAL_NETWORK_SUMMARY,
+  generateStationTimeSeries
+} from '@/data/mockData';
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// If in browser, use Next.js internal proxy `/api/backend` which avoids any CORS issues.
+// If in server-side render, use backend URL directly.
+const BASE_URL =
+  typeof window !== 'undefined'
+    ? '/api/backend'
+    : (process.env.BACKEND_INTERNAL_URL || 'http://127.0.0.1:8000');
 
+const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
+async function safeFetch<T>(endpoint: string): Promise<T | null> {
+  if (isMockMode) return null;
+
+  try {
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      cache: 'no-store',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      console.warn(`[NOAH API] Request to ${endpoint} failed with status: ${res.status}`);
+      return null;
+    }
+
+    return (await res.json()) as T;
+  } catch (err) {
+    console.warn(`[NOAH API] Network error on ${endpoint}, falling back to local dataset.`, err);
+    return null;
+  }
+}
+
+/**
+ * Fetches all weather stations
+ */
 export async function getStations(): Promise<Station[]> {
-  if (USE_MOCK) return mockApi.mockGetStations();
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/stations`, { next: { revalidate: 5 } });
-    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('[NOAH API] Falling back to mock data:', err);
-    return mockApi.mockGetStations();
+  const data = await safeFetch<any[]>('/stations');
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return INITIAL_STATIONS;
   }
+
+  return data.map((raw) => adaptBackendStation(raw));
 }
 
-export async function getStation(id: string): Promise<Station | null> {
-  if (USE_MOCK) return mockApi.mockGetStation(id);
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/stations/${id}`, { next: { revalidate: 5 } });
-    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('[NOAH API] Falling back to mock data:', err);
-    return mockApi.mockGetStation(id);
+/**
+ * Fetches a single weather station by ID
+ */
+export async function getStation(stationId: string): Promise<Station | null> {
+  const data = await safeFetch<any>(`/stations/${stationId}`);
+
+  if (!data) {
+    const fallback = INITIAL_STATIONS.find(
+      (s) => s.id.toLowerCase() === stationId.toLowerCase()
+    );
+    return fallback || null;
   }
+
+  return adaptBackendStation(data);
 }
 
-export async function getAnomalies(filters?: AnomalyFilterOptions): Promise<Anomaly[]> {
-  if (USE_MOCK) return mockApi.mockGetAnomalies(filters);
-  try {
-    const query = new URLSearchParams();
-    if (filters?.severity && filters.severity !== 'ALL') query.set('severity', filters.severity);
-    if (filters?.type && filters.type !== 'ALL') query.set('type', filters.type);
-    if (filters?.stationId) query.set('stationId', filters.stationId);
-    if (filters?.search) query.set('search', filters.search);
+/**
+ * Fetches recent historical readings for a station (LiveWeatherChart)
+ */
+export async function getStationReadings(
+  stationId: string,
+  hours: number = 24
+): Promise<StationReading[]> {
+  const data = await safeFetch<any[]>(`/stations/${stationId}/readings?hours=${hours}`);
 
-    const res = await fetch(`${API_BASE_URL}/api/anomalies?${query.toString()}`, { next: { revalidate: 5 } });
-    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('[NOAH API] Falling back to mock data:', err);
-    return mockApi.mockGetAnomalies(filters);
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return generateStationTimeSeries(stationId, hours);
   }
+
+  return data.map((raw) => adaptBackendReading(raw));
 }
 
-export async function getAnomaly(id: string): Promise<Anomaly | null> {
-  if (USE_MOCK) return mockApi.mockGetAnomaly(id);
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/anomalies/${id}`, { next: { revalidate: 5 } });
-    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('[NOAH API] Falling back to mock data:', err);
-    return mockApi.mockGetAnomaly(id);
+/**
+ * Fetches all active & flagged anomalies
+ */
+export async function getAnomalies(stations: Station[] = []): Promise<Anomaly[]> {
+  const data = await safeFetch<any[]>('/anomalies');
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return INITIAL_ANOMALIES;
   }
+
+  return data.map((raw) => adaptBackendAnomaly(raw, stations));
 }
 
-export async function getNetworkSummary(): Promise<NetworkSummary> {
-  if (USE_MOCK) return mockApi.mockGetNetworkSummary();
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/network/summary`, { next: { revalidate: 5 } });
-    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('[NOAH API] Falling back to mock data:', err);
-    return mockApi.mockGetNetworkSummary();
+/**
+ * Fetches a single anomaly by ID (numeric or string)
+ */
+export async function getAnomaly(
+  anomalyId: string | number,
+  stations: Station[] = []
+): Promise<Anomaly | null> {
+  // Extract numeric id if passed as ANM_2026_007 or 7
+  let numericId = anomalyId;
+  if (typeof anomalyId === 'string' && anomalyId.startsWith('ANM_')) {
+    const parts = anomalyId.split('_');
+    const last = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(last)) numericId = last;
   }
+
+  const data = await safeFetch<any>(`/anomalies/${numericId}`);
+
+  if (!data) {
+    const fallback = INITIAL_ANOMALIES.find(
+      (a) => a.id.toLowerCase() === String(anomalyId).toLowerCase()
+    );
+    return fallback || null;
+  }
+
+  return adaptBackendAnomaly(data, stations);
 }
 
-export async function getStationReadings(id: string, hours: number = 24): Promise<StationReading[]> {
-  if (USE_MOCK) return mockApi.mockGetStationReadings(id, hours);
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/stations/${id}/readings?hours=${hours}`, { next: { revalidate: 5 } });
-    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('[NOAH API] Falling back to mock data:', err);
-    return mockApi.mockGetStationReadings(id, hours);
+/**
+ * Computes or retrieves the NetworkSummary
+ */
+export function getNetworkSummary(stations: Station[], anomalies: Anomaly[]): NetworkSummary {
+  if (stations.length === 0) {
+    return INITIAL_NETWORK_SUMMARY;
   }
+  return computeNetworkSummary(stations, anomalies);
 }

@@ -18,12 +18,12 @@ class NoahWebSocketClient {
   private reconnectTimer: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.url = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/live';
+    this.url = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:8000/ws/live';
   }
 
   public connect() {
     if (typeof window === 'undefined') return;
-    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false') {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
       // In mock mode, we do not attempt real socket connection
       this.isConnected = true;
       return;
@@ -47,13 +47,12 @@ class NoahWebSocketClient {
       };
 
       this.ws.onclose = () => {
-        console.warn('[NOAH WS] Disconnected. Reconnecting in 5s...');
         this.isConnected = false;
         this.scheduleReconnect();
       };
 
-      this.ws.onerror = (err) => {
-        console.error('[NOAH WS] Error:', err);
+      this.ws.onerror = () => {
+        // Connection failure will trigger onclose for reconnection
       };
     } catch (e) {
       console.warn('[NOAH WS] Connection initialization failed:', e);
