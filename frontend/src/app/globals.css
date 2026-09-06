@@ -2,7 +2,7 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --bg-page: #f8fafc;
+  --bg-page: #e2edf8;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #ffffff;
   --border-color: #e2e8f0;
@@ -25,6 +25,19 @@ body {
   color: var(--text-main);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+}
+
+.font-space-grotesk {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+@keyframes typewriterCursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.animate-typewriter-cursor {
+  animation: typewriterCursor 0.8s infinite;
 }
 
 /* Subtle clean scrollbar */

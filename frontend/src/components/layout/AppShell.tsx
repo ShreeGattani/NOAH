@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { X } from 'lucide-react';
@@ -13,9 +14,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAFC] text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#E2EDF8] text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block h-full">
+      <div className="hidden lg:block h-full z-30 shrink-0">
         <Sidebar />
       </div>
 
@@ -39,10 +40,24 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {/* Main Content Area with Sky Blue Meteorological Atmosphere */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#E2EDF8]">
+        {/* Subtle Atmospheric Background Image Layer */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+          <Image
+            src="/landing_bg.png"
+            alt="Meteorological Atmosphere Background"
+            fill
+            priority
+            quality={90}
+            className="object-cover object-center opacity-30"
+          />
+          {/* Atmospheric sky wash for high contrast and data clarity */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#E2EDF8]/80 via-[#EBF3FB]/85 to-[#DDE9F6]/90" />
+        </div>
+
         <Topbar onOpenMobile={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 bg-[#F8FAFC]">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 relative z-10">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>

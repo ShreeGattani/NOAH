@@ -2,7 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Station, Anomaly, NetworkSummary, DemoScenario } from '@/types';
-import { INITIAL_STATIONS, INITIAL_ANOMALIES, INITIAL_NETWORK_SUMMARY, DEMO_SCENARIOS } from '@/data/mockData';
+import { INITIAL_STATIONS, INITIAL_NETWORK_SUMMARY, DEMO_SCENARIOS } from '@/data/mockData';
+import { getStations, getAnomalies } from '@/lib/api';
+import { wsClient, TelemetryPacket } from '@/lib/websocket';
 
 interface DemoContextType {
   currentScenario: DemoScenario;
@@ -52,6 +54,40 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     setStations(updatedStations);
     setAnomalies(currentScenario.activeAnomalies);
   }, [scenarioId, currentScenario, getDerivedStations]);
+
+  // Connect to live backend and listen for WebSocket telemetry
+  useEffect(() => {
+    wsClient.connect();
+
+    const unsubscribe = wsClient.subscribe((packet: TelemetryPacket) => {
+      setLastStreamTick(packet.timestamp || new Date().toISOString());
+
+      if (packet.type === 'READING_UPDATE' && packet.data?.reading) {
+        const r = packet.data.reading;
+        setStations((prev) =>
+          prev.map((s) => {
+            if (s.id.toLowerCase() === packet.stationId.toLowerCase()) {
+              return {
+                ...s,
+                lastUpdated: 'Just now',
+                currentReadings: {
+                  ...s.currentReadings,
+                  temperature: r.temperature != null ? Number(r.temperature) : s.currentReadings.temperature,
+                  humidity: r.humidity != null ? Number(r.humidity) : s.currentReadings.humidity,
+                  pressure: r.pressure != null ? Number(r.pressure) : s.currentReadings.pressure
+                }
+              };
+            }
+            return s;
+          })
+        );
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Periodic simulation tick to make live telemetry feel organic
   useEffect(() => {
